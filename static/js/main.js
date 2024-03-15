@@ -50,8 +50,15 @@ function initWebSocket() {
     };
 
     ws.onmessage = (event) => {
-        console.log("WebSocket message received", event.data);
-        if (typeof event.data !== "string") {
+        if (typeof event.data === "string") {
+            // Assuming the message is a JSON string
+            const message = JSON.parse(event.data);
+            if (message.type === "text") {
+                // Display the text in the feedback div
+                document.getElementById('feedback').textContent = message.data;
+            }
+        } else {
+            // If the message is not a string, it's the audio data
             playAudio(event.data);
         }
     };
@@ -70,9 +77,3 @@ document.getElementById('start-btn').addEventListener('click', captureAndAnalyze
 
 // Initialize WebSocket connection
 initWebSocket();
-
-// Add a button for capturing and analyzing the image
-const analyzeButton = document.createElement('button');
-analyzeButton.textContent = 'Analyze Image';
-analyzeButton.onclick = captureAndAnalyzeImage;
-document.body.appendChild(analyzeButton);

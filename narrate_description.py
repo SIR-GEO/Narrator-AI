@@ -90,6 +90,9 @@ async def websocket_narrate(websocket: WebSocket):
                             )
 
                             if response.status_code == 200:
+                                # First, send the text to the frontend
+                                await websocket.send_text(json.dumps({"type": "text", "data": text_to_speak}))
+                                # Then, send the audio chunks
                                 async for chunk in response.aiter_bytes():
                                     await websocket.send_bytes(chunk)
                                 print("Received audio from ElevenLabs, sent to client.")
