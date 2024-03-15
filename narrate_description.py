@@ -41,7 +41,7 @@ async def websocket_narrate(websocket: WebSocket):
                         model="claude-3-haiku-20240307",
                         max_tokens=300,
                         temperature=1,
-                        system=f"You are {selected_voice_name} and you must describe the image you are given using your unique phrases and words in less than 20 words in a humorous way",
+                        system=f"You are {selected_voice_name} and you must describe the image you are given using your unique phrases in a humorous way and you must always use less than 20 words for each response",
                         messages=[
                             {
                                 "role": "user",
