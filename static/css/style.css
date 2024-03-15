@@ -1,0 +1,72 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+}
+
+#camera-feed {
+    border: 3px solid #333;
+    width: 640px;
+    height: 480px;
+    background-color: #000;
+}
+
+#voice-selection {
+    margin: 20px 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#voice-selection button {
+    padding: 10px 20px;
+    margin: 5px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#voice-selection button:hover {
+    background-color: #0056b3;
+}
+
+#start-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#start-btn:hover {
+    background-color: #218838;
+}
+
+#feedback {
+    margin-top: 20px;
+    text-align: center;
+}
+
+#feedback img {
+    max-width: 640px;
+    max-height: 480px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px;
+}
+
+#feedback p {
+    margin-top: 10px;
+    color: #333;
+}
