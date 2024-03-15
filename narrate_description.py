@@ -13,8 +13,7 @@ router = APIRouter()
 ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
 
-# Initialise the Anthropics client with your API key
-anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)  # Renamed variable here
+anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 elevenlabs_client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
 
@@ -69,11 +68,10 @@ async def websocket_narrate(websocket: WebSocket):
                 # Check if message is not None before accessing its content
                 if message and message.content:
                     try:
-                        model_id = "eleven_turbo_v2"
-                        text_to_speak = message.content[0].text  # Use the text from the model response
+                        model_id = "eleven_monolingual_v1"
+                        text_to_speak = message.content[0].text
                         output_format = "mp3_44100_128"
 
-                        # Use a different variable name for httpx.AsyncClient to avoid conflict
                         async with httpx.AsyncClient() as http_client:
                             response = await http_client.post(
                                 f"https://api.elevenlabs.io/v1/text-to-speech/{selected_voice_id}/stream",
@@ -108,5 +106,4 @@ async def websocket_narrate(websocket: WebSocket):
     except Exception as e:
         print(f"Error during WebSocket communication: {e}")
     finally:
-        # Ensure the WebSocket is closed in case of an error or if the connection is supposed to be closed.
         await websocket.close()
