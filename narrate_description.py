@@ -31,16 +31,17 @@ async def websocket_narrate(websocket: WebSocket):
 
             data_json = json.loads(data)
             image_data = data_json.get('image')
+            selected_voice_id = data_json.get('voiceId', "4c42HvUOZ0L0feAu3r5C")
+            selected_voice_name = data_json.get('voiceName', "David Attenborough")
             if image_data:
-                print("Image data received, sending to Claude model for analysis.")
-                message = None  # Initialize message to None
+                print(f"Image data received, sending to {selected_voice_name} model for analysis.")
+                message = None
                 try:
-                    # Use the renamed anthropic_client here
                     message = anthropic_client.messages.create(
                         model="claude-3-haiku-20240307",
                         max_tokens=300,
                         temperature=1,
-                        system="You are insert name here",
+                        system=f"You are {selected_voice_name} and you must describe the image you are given using your unique phrases and words in less than 20 words in a humorous way",
                         messages=[
                             {
                                 "role": "user",
@@ -55,7 +56,7 @@ async def websocket_narrate(websocket: WebSocket):
                                     },
                                     {
                                         "type": "text",
-                                        "text": "describe this image in 20 words or less"
+                                        "text": f"As {selected_voice_name} describe this image in humorous way in 20 words or less"
                                     }
                                 ]
                             }
@@ -68,7 +69,6 @@ async def websocket_narrate(websocket: WebSocket):
                 # Check if message is not None before accessing its content
                 if message and message.content:
                     try:
-                        voice_id = "4c42HvUOZ0L0feAu3r5C"  # Ensure this is a valid voice ID
                         model_id = "eleven_monolingual_v1"
                         text_to_speak = message.content[0].text  # Use the text from the model response
                         output_format = "mp3_44100_128"
@@ -76,7 +76,7 @@ async def websocket_narrate(websocket: WebSocket):
                         # Use a different variable name for httpx.AsyncClient to avoid conflict
                         async with httpx.AsyncClient() as http_client:
                             response = await http_client.post(
-                                f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}/stream",
+                                f"https://api.elevenlabs.io/v1/text-to-speech/{selected_voice_id}/stream",
                                 json={
                                     "model_id": model_id,
                                     "text": text_to_speak,

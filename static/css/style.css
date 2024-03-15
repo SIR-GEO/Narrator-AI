@@ -38,6 +38,11 @@ body {
     background-color: #0056b3;
 }
 
+#voice-selection button.selected {
+    background-color: #0056b3; /* Darker blue to indicate selection */
+    color: #fff;
+}
+
 #start-btn {
     padding: 10px 20px;
     font-size: 16px;

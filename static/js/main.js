@@ -21,7 +21,21 @@ function playAudio(arrayBuffer) {
     audio.play().catch(e => console.error("Error playing audio:", e));
 }
 
-// Function to capture the current frame and send it for analysis
+let selectedVoiceName = "David Attenborough"; // Default voice name
+
+function selectVoice() {
+    selectedVoiceId = this.getAttribute('data-voice-id');
+    selectedVoiceName = this.getAttribute('data-voice-name'); // Update the voice name
+    document.querySelectorAll('.voice-btn').forEach(btn => btn.classList.remove('selected'));
+    this.classList.add('selected');
+}
+
+// Add event listeners to voice selection buttons
+document.querySelectorAll('.voice-btn').forEach(btn => {
+    btn.addEventListener('click', selectVoice);
+});
+
+// Modify captureAndAnalyzeImage to include selectedVoiceId
 function captureAndAnalyzeImage() {
     const canvas = document.createElement('canvas');
     canvas.width = cameraFeedElement.videoWidth;
@@ -31,9 +45,8 @@ function captureAndAnalyzeImage() {
     const imageDataUrl = canvas.toDataURL('image/jpeg');
     const base64ImageContent = imageDataUrl.split(',')[1];
 
-    // Ensure WebSocket is open before sending
     if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ image: base64ImageContent }));
+        ws.send(JSON.stringify({ image: base64ImageContent, voiceId: selectedVoiceId, voiceName: selectedVoiceName }));
     } else {
         console.error("WebSocket is not open.");
     }
