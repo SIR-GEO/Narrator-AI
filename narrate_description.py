@@ -69,7 +69,7 @@ async def websocket_narrate(websocket: WebSocket):
                 # Check if message is not None before accessing its content
                 if message and message.content:
                     try:
-                        model_id = "eleven_monolingual_v1"
+                        model_id = "eleven_turbo_v2"
                         text_to_speak = message.content[0].text  # Use the text from the model response
                         output_format = "mp3_44100_128"
 
