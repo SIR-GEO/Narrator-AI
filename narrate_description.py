@@ -7,68 +7,10 @@ import base64
 import websockets
 import anthropic
 import httpx
+from generate_description import generate_description
+from convert_text_to_speech import convert_text_to_speech
 
 router = APIRouter()
-
-ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
-ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
-
-anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-
-elevenlabs_client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
-
-async def generate_description(image_data, selected_voice_name):
-    try:
-        message = anthropic_client.messages.create(
-            model="claude-3-haiku-20240307",
-            max_tokens=300,
-            temperature=1,
-            system=f"You are {selected_voice_name} and you must describe the image you are given using your unique phrases in a humorous way and you must always use less than 20 words for each response",
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": "image/jpeg",
-                                "data": image_data
-                            }
-                        },
-                        {
-                            "type": "text",
-                            "text": f"As {selected_voice_name} describe this image in humorous way in 20 words or less"
-                        }
-                    ]
-                }
-            ]
-        )
-        return message.content[0].text if message and message.content else None
-    except Exception as e:
-        print(f"Error generating description: {e}")
-        return None
-
-async def convert_text_to_speech(text, selected_voice_id):
-    try:
-        async with httpx.AsyncClient() as http_client:
-            response = await http_client.post(
-                f"https://api.elevenlabs.io/v1/text-to-speech/{selected_voice_id}/stream",
-                json={
-                    "model_id": "eleven_monolingual_v1",
-                    "text": text,
-                    "output_format": "mp3_44100_128"
-                },
-                headers={
-                    "Content-Type": "application/json",
-                    "xi-api-key": ELEVENLABS_API_KEY
-                },
-                timeout=None
-            )
-            return response
-    except Exception as e:
-        print(f"Error during text-to-speech conversion: {e}")
-        return None
 
 @router.websocket_route("/narrate")
 async def websocket_narrate(websocket: WebSocket):
