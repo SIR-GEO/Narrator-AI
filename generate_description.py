@@ -36,7 +36,7 @@ async def generate_description(image_data, selected_voice_name):
             async for event in stream.text_stream:
                 print(event)
                 description += event
-            return description
+                yield event
     except Exception as e:
         print(f"Error generating description: {e}")
-        return None
+        yield "Error generating description."

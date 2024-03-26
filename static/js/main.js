@@ -65,10 +65,13 @@ function initWebSocket() {
 
     ws.onmessage = (event) => {
         if (typeof event.data === "string") {
-            // Assuming the message is a JSON string
             const message = JSON.parse(event.data);
-            if (message.type === "text") {
-                // Display the text in the feedback div
+            if (message.type === "text_chunk") {
+                // Append each text chunk to the feedback div
+                const feedbackElement = document.getElementById('feedback');
+                feedbackElement.textContent += message.data;
+            } else if (message.type === "text") {
+                // Handle other text messages, if any
                 document.getElementById('feedback').textContent = message.data;
             }
         } else {
