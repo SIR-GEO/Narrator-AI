@@ -1,6 +1,7 @@
 from elevenlabs.client import ElevenLabs
 import os
 import httpx
+import time
 
 ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
 
@@ -22,7 +23,9 @@ async def convert_text_to_speech(text, selected_voice_id):
                 },
                 timeout=None
             )
-            return response
+            # Stream the response content
+            async for chunk in response.aiter_bytes():
+                print(f"Received chunk: {len(chunk)} bytes at {time.time()}")
+                yield chunk
     except Exception as e:
         print(f"Error during text-to-speech conversion: {e}")
-        return None
