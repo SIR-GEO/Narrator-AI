@@ -37,6 +37,10 @@ document.querySelectorAll('.voice-btn').forEach(btn => {
 
 // Modify captureAndAnalyzeImage to include selectedVoiceId
 function captureAndAnalyzeImage() {
+    // Reset the feedback element's content
+    const feedbackElement = document.getElementById('feedback');
+    feedbackElement.textContent = '';
+    
     const canvas = document.createElement('canvas');
     canvas.width = cameraFeedElement.videoWidth;
     canvas.height = cameraFeedElement.videoHeight;
