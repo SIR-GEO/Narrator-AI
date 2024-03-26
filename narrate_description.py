@@ -1,5 +1,4 @@
 from fastapi import APIRouter, WebSocket
-from elevenlabs.client import ElevenLabs
 import json
 from generate_description import generate_description
 from convert_text_to_speech import convert_text_to_speech
