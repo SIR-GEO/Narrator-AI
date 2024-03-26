@@ -21,7 +21,7 @@ function playAudio(arrayBuffer) {
     audio.play().catch(e => console.error("Error playing audio:", e));
 }
 
-let selectedVoiceName = "David Attenborough"; // Default voice name
+let selectedVoiceName = "Daniel Attenborough"; // Default voice name
 
 function selectVoice() {
     selectedVoiceId = this.getAttribute('data-voice-id');
@@ -54,6 +54,7 @@ function captureAndAnalyzeImage() {
 
 // Initialize WebSocket connection and event handlers
 function initWebSocket() {
+    console.log(`ws://${window.location.host}/narrate`);
     ws = new WebSocket(`ws://${window.location.host}/narrate`);
     ws.binaryType = 'arraybuffer'; // Important for audio data
 

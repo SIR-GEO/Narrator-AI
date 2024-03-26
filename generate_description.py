@@ -1,13 +1,13 @@
 import os
-import anthropic
+import asyncio
+from anthropic import AsyncAnthropic
 
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
 
-anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-
 async def generate_description(image_data, selected_voice_name):
+    client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
     try:
-        message = anthropic_client.messages.create(
+        async with client.messages.stream(
             model="claude-3-haiku-20240307",
             max_tokens=100,
             temperature=1,
@@ -31,8 +31,12 @@ async def generate_description(image_data, selected_voice_name):
                     ]
                 }
             ]
-        )
-        return message.content[0].text if message and message.content else None
+        ) as stream:
+            description = ""
+            async for event in stream.text_stream:
+                print(event)
+                description += event
+            return description
     except Exception as e:
         print(f"Error generating description: {e}")
         return None
