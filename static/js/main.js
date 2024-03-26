@@ -13,12 +13,33 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         });
 }
 
+let audioQueue = [];
+let isPlaying = false;
+
 function playAudio(arrayBuffer) {
     console.log("Attempting to play audio", arrayBuffer);
     const blob = new Blob([arrayBuffer], { type: 'audio/mp3' });
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    audio.play().catch(e => console.error("Error playing audio:", e));
+    audioQueue.push(blob);
+    if (!isPlaying) {
+        playNextAudio();
+    }
+}
+
+function playNextAudio() {
+    if (audioQueue.length > 0) {
+        isPlaying = true;
+        const url = URL.createObjectURL(audioQueue.shift());
+        const audio = new Audio(url);
+        audio.play().then(() => {
+            audio.addEventListener('ended', playNextAudio);
+        }).catch(e => {
+            console.error("Error playing audio:", e);
+            isPlaying = false;
+            playNextAudio(); // Attempt to play the next in queue if current fails
+        });
+    } else {
+        isPlaying = false;
+    }
 }
 
 let selectedVoiceName = "Daniel Attenborough"; // Default voice name
