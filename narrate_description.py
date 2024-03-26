@@ -1,12 +1,6 @@
 from fastapi import APIRouter, WebSocket
 from elevenlabs.client import ElevenLabs
-import asyncio
-import os
 import json
-import base64
-import websockets
-import anthropic
-import httpx
 from generate_description import generate_description
 from convert_text_to_speech import convert_text_to_speech
 
@@ -25,8 +19,8 @@ async def websocket_narrate(websocket: WebSocket):
 
             data_json = json.loads(data)
             image_data = data_json.get('image')
-            selected_voice_id = data_json.get('voiceId', "4c42HvUOZ0L0feAu3r5C")
-            selected_voice_name = data_json.get('voiceName', "David Attenborough")
+            selected_voice_id = data_json.get('voiceId')
+            selected_voice_name = data_json.get('voiceName')
             if image_data:
                 print(f"Image data received, sending to {selected_voice_name} model for analysis.")
                 description_text = await generate_description(image_data, selected_voice_name)
