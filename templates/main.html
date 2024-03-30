@@ -12,6 +12,7 @@
 </head>
 <body>
     <video id="camera-feed" autoplay></video>
+    <div id="captured-images" style="display: flex; overflow-x: auto; margin-top: 20px;"></div>
     <div id="voice-selection">
         <button class="voice-btn" data-voice-id="0SQfBfjRCI4jQdnyrF5B" data-voice-name="Michael Caine">Michael Kaine 🎩</button>
         <button class="voice-btn" data-voice-id="4c42HvUOZ0L0feAu3r5C" data-voice-name="David Attenborough">Daniel Attenborough 🌍</button>
@@ -21,10 +22,10 @@
         <button class="voice-btn" data-voice-id="bnvSNcvmOz9I0VhuOh58" data-voice-name="John Cleese">Jon Cheese 🧀</button>
         <button class="voice-btn" data-voice-id="eqElC35YIut3wVoriLOV" data-voice-name="Maggie Smith">Moggie Smith 👵</button>
         <button class="voice-btn" data-voice-id="g5Qp5bT7Dm1TIJecJuds" data-voice-name="Judi Dench">Judy Drench 🎭</button>
-        <button class="voice-btn" data-voice-id="w642gnqphLNLyM1zH2eI" data-voice-name="Richard Hammond">Richard Ham 🚗</button>
+        <button class="voice-btn" data-voice-id="w642gnqphLNLyM1zH2eI" data-voice-name="Richard Hammond">Richard Hamed 🚗</button>
     </div>
     <div id="picture-counter">Pictures taken: 0</div>
-    <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px;">
+    <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px;">
         <button id="start-btn">Single Narrate</button>
         <label class="switch">
             <input type="checkbox" id="continuous-narrate-toggle">

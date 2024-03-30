@@ -1,10 +1,12 @@
-Add a scrollable working continous button
+*Add a scrollable working continous button* - Done
 
-When in continous or normal singular mode, make sure it displays te images its taking under the live camera feed. 
+When in continous or normal singular mode, make sure it displays the images its taking under the live camera feed. 
 
 for mobile devices, add a button to use the reverse camera
 
-*Make sure the coninous button isnt overloaded, because it constantly sends due to it being so fast, its quicker than the actual already previous loaded message being read out, it should wait until done before loading the next message please*
+Add conversation history so it knows what its just previously described in the image before
+
+*Make sure the coninous button isnt overloaded, because it constantly sends due to it being so fast, its quicker than the actual already previous loaded message being read out, it should wait until done before loading the next message please* - Done
 
 *Make sure deselecting the continous mode button actually turns it off* - Every 5 seconds except for the first one which should be immediately.
 
@@ -14,4 +16,4 @@ for mobile devices, add a button to use the reverse camera
 
 *added modification ensures that as soon as the "Continuously Narrate" mode is enabled, the first image is processed immediately, and then it waits 5 seconds before processing each subsequent image.* - Done
 
-Make it so it doesn't delete the previous messsages to the webpage, it simply puts new messages on the line below and it has a max of 400px and a scroll bar appears which automatially scrolls down to show eeach message, also add a timestamp to each message please
+*Make it so it doesn't delete the previous messsages to the webpage, it simply puts new messages on the line below and it has a max of 400px and a scroll bar appears which automatially scrolls down to show eeach message, also add a timestamp to each message please* - Done

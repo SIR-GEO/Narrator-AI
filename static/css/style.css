@@ -64,7 +64,10 @@ body {
 }
 
 #feedback {
+    max-width: 1500px;
     margin-top: 20px;
+    padding-left: 20px; /* Added horizontal padding */
+    padding-right: 20px; /* Added horizontal padding */
     text-align: left;
     max-height: 100px;
     overflow-y: auto;
@@ -139,6 +142,40 @@ body {
 #picture-counter {
   font-size: 18px;
   color: #333;
+}
+
+#captured-images {
+  display: flex;
+  overflow-x: auto;
+  margin-top: 20px;
+  max-width: 600px; /* Set the maximum width */
+  white-space: nowrap; /* Keep images in a single line */
+  scroll-snap-type: x mandatory; /* Enable scroll snap along the x-axis and make it mandatory */
+}
+
+#captured-images .image-wrapper {
+  flex: 0 0 100px; /* Do not grow, do not shrink, base width of 100px */
+  margin-right: 5px;
+  position: relative;
+  display: inline-flex; /* Use inline-flex to keep the wrapper inline */
+  scroll-snap-align: start; /* Optional: Enhances the scrolling experience */
+}
+
+#captured-images .image-wrapper img {
+  max-width: 100%; /* Ensure images do not exceed the width of their wrappers */
+  height: auto; /* Maintain aspect ratio */
+}
+
+#captured-images .image-wrapper::after {
+  content: attr(data-picture-number);
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.75); /* Make it darker for better visibility */
+  color: white;
+  padding: 2px 5px;
+  font-size: 12px; /* Adjust font size as needed */
+  z-index: 10; /* Increase z-index to ensure it's above the image */
 }
 
 .error {
