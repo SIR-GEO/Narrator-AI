@@ -50,7 +50,7 @@ function selectVoice() {
     document.querySelectorAll('.voice-btn').forEach(btn => btn.classList.remove('selected'));
     this.classList.add('selected');
     document.getElementById('feedback').classList.remove('error'); // Remove error class
-    document.getElementById('feedback').textContent = ''; // Clear any previous error message
+    // document.getElementById('feedback').textContent = ''; // Clear any previous error message
 }
 
 // Add event listeners to voice selection buttons
@@ -112,7 +112,7 @@ function initWebSocket() {
                     p = document.createElement('p');
                     const timestamp = new Date().toLocaleTimeString();
                     p.setAttribute('data-picture-count', message.pictureCount);
-                    p.textContent = `[${timestamp}] [Picture ${message.pictureCount}] `;
+                    p.textContent = `[${timestamp}] [Picture ${message.pictureCount}] [${message.voiceName}] `;
                     feedbackElement.appendChild(p);
                 }
                 p.textContent += message.data;

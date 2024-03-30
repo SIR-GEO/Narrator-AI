@@ -65,9 +65,9 @@ body {
 
 #feedback {
     margin-top: 20px;
-    text-align: left; /* Changed to left for better readability */
-    max-height: 400px; /* Set maximum height */
-    overflow-y: auto; /* Enables vertical scrollbar when content overflows */
+    text-align: left;
+    max-height: 100px;
+    overflow-y: auto;
 }
 
 #feedback img {

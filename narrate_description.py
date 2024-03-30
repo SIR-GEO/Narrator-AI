@@ -25,7 +25,7 @@ async def websocket_narrate(websocket: WebSocket):
             if image_data:
                 print(f"Image data received, sending to {selected_voice_name} model for analysis.")
                 description_accumulator = ""
-                punctuation_pattern = re.compile(r"[.!?]")
+                punctuation_pattern = re.compile(r"[!?]")
 
                 async for description_chunk in generate_description(image_data, selected_voice_name):
                     if description_chunk:
@@ -36,7 +36,7 @@ async def websocket_narrate(websocket: WebSocket):
                             description_accumulator += " " + description_chunk
 
                         # Send each text chunk to the frontend
-                        await websocket.send_text(json.dumps({"type": "text_chunk", "data": description_chunk, "pictureCount": data_json.get('pictureCount')}))
+                        await websocket.send_text(json.dumps({"type": "text_chunk", "data": description_chunk, "pictureCount": data_json.get('pictureCount'), "voiceName": selected_voice_name}))
 
                         # If the chunk ends with punctuation, convert and stream it
                         if punctuation_pattern.search(description_chunk):
