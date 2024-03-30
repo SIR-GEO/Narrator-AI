@@ -7,6 +7,8 @@ import asyncio
 
 router = APIRouter()
 
+description_history = []
+
 @router.websocket_route("/narrate")
 async def websocket_narrate(websocket: WebSocket):
     await websocket.accept()
@@ -26,8 +28,8 @@ async def websocket_narrate(websocket: WebSocket):
                 print(f"Image data received, sending to {selected_voice_name} model for analysis.")
                 description_accumulator = ""
                 punctuation_pattern = re.compile(r"[!?]")
-
-                async for description_chunk in generate_description(image_data, selected_voice_name):
+                
+                async for description_chunk in generate_description(image_data, selected_voice_name, description_history):
                     if description_chunk:
                         # Accumulate the chunk, ensuring not to break on single punctuation marks
                         if not punctuation_pattern.fullmatch(description_chunk.strip()):
@@ -42,12 +44,16 @@ async def websocket_narrate(websocket: WebSocket):
                         if punctuation_pattern.search(description_chunk):
                             audio_chunks = convert_text_to_speech(description_accumulator.strip(), selected_voice_id)
                             await asyncio.gather(*[websocket.send_bytes(chunk) async for chunk in audio_chunks])
+                            # Append the fully accumulated description to the history
+                            description_history.append(description_accumulator.strip())
                             description_accumulator = ""
 
                 # If there is any remaining text after the loop, send it for conversion too
                 if description_accumulator:
                     audio_chunks = convert_text_to_speech(description_accumulator.strip(), selected_voice_id)
                     await asyncio.gather(*[websocket.send_bytes(chunk) async for chunk in audio_chunks])
+                    # Append the remaining accumulated description to the history
+                    description_history.append(description_accumulator.strip())
 
                 print("Finished processing image data.")
             else:

@@ -60,7 +60,7 @@ let selectedVoiceId;
 
 
 
-function captureAndAnalyzeImage() {
+function captureAndAnalyseImage() {
     if (!selectedVoiceId) {
         const feedbackElement = document.getElementById('feedback');
         feedbackElement.textContent = 'Please select a voice before narrating.';
@@ -98,7 +98,7 @@ function captureAndAnalyzeImage() {
     }
 }
 
-// Initialize WebSocket connection and event handlers
+// Initialise WebSocket connection and event handlers
 function initWebSocket() {
     console.log(`ws://${window.location.host}/narrate`);
     ws = new WebSocket(`ws://${window.location.host}/narrate`);
@@ -119,10 +119,10 @@ function initWebSocket() {
                     p = document.createElement('p');
                     const timestamp = new Date().toLocaleTimeString();
                     p.setAttribute('data-picture-count', message.pictureCount);
-                    p.textContent = `[${timestamp}] [Picture ${message.pictureCount}] [${message.voiceName}] `;
+                    p.innerHTML = `<strong>[${timestamp}] [Picture ${message.pictureCount}] [${message.voiceName}]</strong> `;
                     feedbackElement.appendChild(p);
                 }
-                p.textContent += message.data;
+                p.innerHTML += `${message.data}`;
                 feedbackElement.scrollTop = feedbackElement.scrollHeight;
             }
         } else {
@@ -139,10 +139,10 @@ function initWebSocket() {
     };
 }
 
-// Add event listener to the start button for capturing and analyzing the image
-document.getElementById('start-btn').addEventListener('click', captureAndAnalyzeImage);
+// Add event listener to the start button for capturing and analysing the image
+document.getElementById('start-btn').addEventListener('click', captureAndAnalyseImage);
 
-// Initialize WebSocket connection
+// Initialise WebSocket connection
 initWebSocket();
 
 let continuousNarrationInterval; // Holds the interval ID for continuous narration
@@ -155,9 +155,9 @@ document.getElementById('continuous-narrate-toggle').addEventListener('change', 
             this.checked = false;
             return;
         }
-        captureAndAnalyzeImage(); // Send the first image immediately
+        captureAndAnalyseImage(); // Send the first image immediately
         if (!continuousNarrationInterval) {
-            continuousNarrationInterval = setInterval(captureAndAnalyzeImage, 5000); // 5-second delay for subsequent images
+            continuousNarrationInterval = setInterval(captureAndAnalyseImage, 5000); // 5-second delay for subsequent images
         }
     } else {
         if (continuousNarrationInterval) {
@@ -168,9 +168,9 @@ document.getElementById('continuous-narrate-toggle').addEventListener('change', 
 });
 
 // Existing code for adding event listener to the start button
-document.getElementById('start-btn').addEventListener('click', captureAndAnalyzeImage);
+document.getElementById('start-btn').addEventListener('click', captureAndAnalyseImage);
 
-// Initialize WebSocket connection
+// Initialise WebSocket connection
 initWebSocket();
 
 let pictureCount = 0;
