@@ -74,7 +74,7 @@ function captureAndAnalyzeImage() {
     document.getElementById('picture-counter').textContent = `Pictures taken: ${pictureCount}`;
     // Reset the feedback element's content
     const feedbackElement = document.getElementById('feedback');
-    feedbackElement.textContent = '';
+    // feedbackElement.textContent = '';
     
     const canvas = document.createElement('canvas');
     canvas.width = cameraFeedElement.videoWidth;
@@ -85,7 +85,7 @@ function captureAndAnalyzeImage() {
     const base64ImageContent = imageDataUrl.split(',')[1];
 
     if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ image: base64ImageContent, voiceId: selectedVoiceId, voiceName: selectedVoiceName }));
+        ws.send(JSON.stringify({ image: base64ImageContent, voiceId: selectedVoiceId, voiceName: selectedVoiceName, pictureCount: pictureCount }));
     } else {
         console.error("WebSocket is not open.");
     }
@@ -106,15 +106,19 @@ function initWebSocket() {
         if (typeof event.data === "string") {
             const message = JSON.parse(event.data);
             if (message.type === "text_chunk") {
-                // Append each text chunk to the feedback div
-                const feedbackElement = document.getElementById('feedback');
-                feedbackElement.textContent += message.data;
-            } else if (message.type === "text") {
-                // Handle other text messages, if any
-                document.getElementById('feedback').textContent = message.data;
+                let feedbackElement = document.getElementById('feedback');
+                let p = document.querySelector(`p[data-picture-count="${message.pictureCount}"]`);
+                if (!p) {
+                    p = document.createElement('p');
+                    const timestamp = new Date().toLocaleTimeString();
+                    p.setAttribute('data-picture-count', message.pictureCount);
+                    p.textContent = `[${timestamp}] [Picture ${message.pictureCount}] `;
+                    feedbackElement.appendChild(p);
+                }
+                p.textContent += message.data;
+                feedbackElement.scrollTop = feedbackElement.scrollHeight;
             }
         } else {
-            // If the message is not a string, it's the audio data
             playAudio(event.data);
         }
     };

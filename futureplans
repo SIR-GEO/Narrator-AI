@@ -12,6 +12,6 @@ for mobile devices, add a button to use the reverse camera
 
 *Add a message to display if no voice has been selected and a user tries to press the single narrate or continous narrate button please* - Done
 
-*added modification ensures that as soon as the "Continuously Narrate" mode is enabled, the first image is processed immediately, and then it waits 5 seconds before processing each subsequent image.*
+*added modification ensures that as soon as the "Continuously Narrate" mode is enabled, the first image is processed immediately, and then it waits 5 seconds before processing each subsequent image.* - Done
 
 Make it so it doesn't delete the previous messsages to the webpage, it simply puts new messages on the line below and it has a max of 400px and a scroll bar appears which automatially scrolls down to show eeach message, also add a timestamp to each message please

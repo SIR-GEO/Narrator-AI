@@ -36,7 +36,7 @@ async def websocket_narrate(websocket: WebSocket):
                             description_accumulator += " " + description_chunk
 
                         # Send each text chunk to the frontend
-                        await websocket.send_text(json.dumps({"type": "text_chunk", "data": description_chunk}))
+                        await websocket.send_text(json.dumps({"type": "text_chunk", "data": description_chunk, "pictureCount": data_json.get('pictureCount')}))
 
                         # If the chunk ends with punctuation, convert and stream it
                         if punctuation_pattern.search(description_chunk):
