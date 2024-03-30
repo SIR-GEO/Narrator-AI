@@ -23,7 +23,15 @@
         <button class="voice-btn" data-voice-id="g5Qp5bT7Dm1TIJecJuds" data-voice-name="Judi Dench">Judy Drench 🎭</button>
         <button class="voice-btn" data-voice-id="w642gnqphLNLyM1zH2eI" data-voice-name="Richard Hammond">Richard Ham 🚗</button>
     </div>
-    <button id="start-btn">Narrate</button>
+    <div id="picture-counter">Pictures taken: 0</div>
+    <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px;">
+        <button id="start-btn">Single Narrate</button>
+        <label class="switch">
+            <input type="checkbox" id="continuous-narrate-toggle">
+            <span class="slider round"></span>
+        </label>
+        <span>Continuously Narrate</span>
+    </div>
     <div id="feedback"></div>
     <script src="/static/js/main.js"></script>
 </body>

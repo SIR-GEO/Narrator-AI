@@ -46,9 +46,11 @@ let selectedVoiceName = "Daniel Attenborough"; // Default voice name
 
 function selectVoice() {
     selectedVoiceId = this.getAttribute('data-voice-id');
-    selectedVoiceName = this.getAttribute('data-voice-name'); // Update the voice name
+    selectedVoiceName = this.getAttribute('data-voice-name');
     document.querySelectorAll('.voice-btn').forEach(btn => btn.classList.remove('selected'));
     this.classList.add('selected');
+    document.getElementById('feedback').classList.remove('error'); // Remove error class
+    document.getElementById('feedback').textContent = ''; // Clear any previous error message
 }
 
 // Add event listeners to voice selection buttons
@@ -56,8 +58,20 @@ document.querySelectorAll('.voice-btn').forEach(btn => {
     btn.addEventListener('click', selectVoice);
 });
 
+let selectedVoiceId; // Declare selectedVoiceId globally
+
+
+
 // Modify captureAndAnalyzeImage to include selectedVoiceId
 function captureAndAnalyzeImage() {
+    if (!selectedVoiceId) {
+        const feedbackElement = document.getElementById('feedback');
+        feedbackElement.textContent = 'Please select a voice before narrating.';
+        feedbackElement.classList.add('error'); // Add this line
+        return;
+    }
+    pictureCount++;
+    document.getElementById('picture-counter').textContent = `Pictures taken: ${pictureCount}`;
     // Reset the feedback element's content
     const feedbackElement = document.getElementById('feedback');
     feedbackElement.textContent = '';
@@ -119,3 +133,33 @@ document.getElementById('start-btn').addEventListener('click', captureAndAnalyze
 
 // Initialize WebSocket connection
 initWebSocket();
+
+let continuousNarrationInterval; // Holds the interval ID for continuous narration
+
+document.getElementById('continuous-narrate-toggle').addEventListener('change', function() {
+    if (this.checked) {
+        if (!selectedVoiceId) {
+            document.getElementById('feedback').textContent = 'Please select a voice before narrating.';
+            document.getElementById('feedback').classList.add('error');
+            this.checked = false;
+            return;
+        }
+        captureAndAnalyzeImage(); // Send the first image immediately
+        if (!continuousNarrationInterval) {
+            continuousNarrationInterval = setInterval(captureAndAnalyzeImage, 5000); // 5-second delay for subsequent images
+        }
+    } else {
+        if (continuousNarrationInterval) {
+            clearInterval(continuousNarrationInterval);
+            continuousNarrationInterval = null;
+        }
+    }
+});
+
+// Existing code for adding event listener to the start button
+document.getElementById('start-btn').addEventListener('click', captureAndAnalyzeImage);
+
+// Initialize WebSocket connection
+initWebSocket();
+
+let pictureCount = 0;
