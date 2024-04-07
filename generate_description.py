@@ -7,7 +7,7 @@ ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
 async def generate_description(image_data, selected_voice_name, description_history):
     client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
     try:
-        system_prompt = f"You are {selected_voice_name} and you must describe the image you are given using your unique phrases in a humorous way. Please use only raw text without any special formatting characters like asterisks. Your previous image descriptions include: {' '.join(description_history)}"
+        system_prompt = f"You are {selected_voice_name} and you must describe the image you are given using your unique phrases in a humorous way in 15 words or less. Please use only raw text without any special formatting characters like asterisks. Your previous image descriptions include: {' '.join(description_history)}"
         
         print("System prompt:", system_prompt)
 
@@ -30,7 +30,7 @@ async def generate_description(image_data, selected_voice_name, description_hist
                         },
                         {
                             "type": "text",
-                            "text": f"As {selected_voice_name} describe this image in humorous way in 20 words or less"
+                            "text": f"As {selected_voice_name} describe this image in humorous way in 15 words or less"
                         }
                     ]
                 }
