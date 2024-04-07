@@ -4,7 +4,9 @@
 
 for mobile devices, add a button to use the reverse camera
 
-Add conversation history so it knows what its just previously described in the image before
+*Add conversation history so it knows what its just previously described in the image before*
+
+*Add conversation history to include the last few images too, to better come up with a description*
 
 *Make sure the coninous button isnt overloaded, because it constantly sends due to it being so fast, its quicker than the actual already previous loaded message being read out, it should wait until done before loading the next message please* - Done
 
