@@ -27,7 +27,7 @@ async def websocket_narrate(websocket: WebSocket):
             if image_data:
                 print(f"Image data received, sending to {selected_voice_name} model for analysis.")
                 description_accumulator = ""
-                punctuation_pattern = re.compile(r"[!?]")
+                punctuation_pattern = re.compile(r"[*]")
                 
                 async for description_chunk in generate_description(image_data, selected_voice_name, description_history):
                     if description_chunk:

@@ -48,8 +48,13 @@ function selectVoice() {
     selectedVoiceName = this.getAttribute('data-voice-name');
     document.querySelectorAll('.voice-btn').forEach(btn => btn.classList.remove('selected'));
     this.classList.add('selected');
-    document.getElementById('feedback').classList.remove('error');
-    // document.getElementById('feedback').textContent = ''; // Clear any previous error message
+
+    // Check if the current feedback is the voice selection warning before clearing
+    const feedbackElement = document.getElementById('feedback');
+    if (feedbackElement.textContent === 'Please select a voice before narrating.') {
+        feedbackElement.textContent = ''; // Clear the warning message
+    }
+    feedbackElement.classList.remove('error'); // Remove the error class if present
 }
 
 document.querySelectorAll('.voice-btn').forEach(btn => {
