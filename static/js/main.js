@@ -105,8 +105,8 @@ function captureAndAnalyseImage() {
 
 // Initialise WebSocket connection and event handlers
 function initWebSocket() {
-    console.log(`ws://${window.location.host}/narrate`);
-    ws = new WebSocket(`ws://${window.location.host}/narrate`);
+    console.log(`wss://${window.location.host}/narrate`);
+    ws = new WebSocket(`wss://${window.location.host}/narrate`);
     ws.binaryType = 'arraybuffer'; // Important for audio data
 
     ws.onopen = () => {
