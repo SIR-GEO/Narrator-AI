@@ -181,3 +181,19 @@ body {
 .error {
   color: red;
 }
+
+#toggle-camera-btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  background-color: #ff9800; /* Orange color for visibility */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#toggle-camera-btn:hover {
+  background-color: #e68900; /* Darker shade of orange on hover */
+}

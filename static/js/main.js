@@ -1,16 +1,41 @@
 const cameraFeedElement = document.getElementById('camera-feed');
 let ws;
+let currentStream = null;
+let currentDeviceIndex = 0;
+let allCameras = [];
 
-if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({ video: true })
-        .then(function(stream) {
-            cameraFeedElement.srcObject = stream;
-            cameraFeedElement.play();
-        })
-        .catch(function(error) {
-            console.error("Webcam access denied:", error);
-        });
+function stopCurrentVideoStream() {
+    if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+    }
 }
+
+function getCameras() {
+    navigator.mediaDevices.enumerateDevices()
+        .then(devices => {
+            allCameras = devices.filter(device => device.kind === 'videoinput');
+            if (allCameras.length > 0) {
+                switchCamera(); // Initialize the first camera
+            }
+        })
+        .catch(error => console.error("Could not get cameras:", error));
+}
+
+function switchCamera() {
+    stopCurrentVideoStream();
+    currentDeviceIndex = (currentDeviceIndex + 1) % allCameras.length;
+    const deviceId = allCameras[currentDeviceIndex].deviceId;
+    navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } } })
+        .then(stream => {
+            currentStream = stream;
+            cameraFeedElement.srcObject = stream;
+        })
+        .catch(error => console.error("Could not switch camera:", error));
+}
+
+getCameras();
+
+document.getElementById('toggle-camera-btn').addEventListener('click', switchCamera);
 
 let audioQueue = [];
 let isPlaying = false;
