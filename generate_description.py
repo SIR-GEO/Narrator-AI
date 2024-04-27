@@ -30,7 +30,7 @@ async def generate_description(image_data, selected_voice_name, description_hist
                         },
                         {
                             "type": "text",
-                            "text": f"As {selected_voice_name} describe this image in humorous way in 15 words or less"
+                            "text": f"As {selected_voice_name} describe this image in a humorous way in 15 words or less"
                         }
                     ]
                 }
