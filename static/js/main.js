@@ -27,7 +27,7 @@ function switchCamera() {
     const deviceId = allCameras[currentDeviceIndex].deviceId;
     const constraints = {
         video: {
-            deviceId: { exact: deviceId },
+            deviceId: deviceId,
             width: { ideal: 640 },
             height: { ideal: 480 }
         }
@@ -42,17 +42,36 @@ function switchCamera() {
             console.error("Could not switch camera:", error);
             console.error("Error name: ", error.name);
             console.error("Error message: ", error.message);
-            if (error.name === 'NotAllowedError') {
-                alert('Camera access was denied. Please allow camera access for this site.');
-            } else if (error.name === 'NotFoundError') {
-                alert('No camera found. Please ensure a camera is properly connected or integrated.');
-            } else if (error.name === 'NotReadableError') {
-                alert('Camera is currently being used by another application. Please close that application and try again.');
-            } else if (error.name === 'OverconstrainedError') {
-                alert('No camera matches the requested constraints. Please adjust the settings or try a different camera.');
-            } else {
-                alert('An unknown error occurred when trying to access the camera.');
-            }
+            handleCameraError(error);
+        });
+}
+
+function handleCameraError(error) {
+    if (error.name === 'NotAllowedError') {
+        alert('Camera access was denied. Please allow camera access for this site.');
+    } else if (error.name === 'NotFoundError') {
+        alert('No camera found. Please ensure a camera is properly connected or integrated.');
+    } else if (error.name === 'NotReadableError') {
+        alert('Camera is currently being used by another application. Please close that application and try again.');
+    } else if (error.name === 'OverconstrainedError') {
+        alert('No camera matches the requested constraints. Trying default settings...');
+        fallbackToDefaultCamera();
+    } else {
+        alert('An unknown error occurred when trying to access the camera.');
+    }
+}
+
+function fallbackToDefaultCamera() {
+    const constraints = {
+        video: true // Use default settings
+    };
+    navigator.mediaDevices.getUserMedia(constraints)
+        .then(stream => {
+            currentStream = stream;
+            cameraFeedElement.srcObject = stream;
+        })
+        .catch(error => {
+            console.error("Could not access default camera:", error);
         });
 }
 
