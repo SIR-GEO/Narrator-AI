@@ -30,7 +30,22 @@ function switchCamera() {
             currentStream = stream;
             cameraFeedElement.srcObject = stream;
         })
-        .catch(error => console.error("Could not switch camera:", error));
+        .catch(error => {
+            console.error("Could not switch camera:", error);
+            console.error("Error name: ", error.name);
+            console.error("Error message: ", error.message);
+            if (error.name === 'NotAllowedError') {
+                alert('Camera access was denied. Please allow camera access for this site.');
+            } else if (error.name === 'NotFoundError') {
+                alert('No camera found. Please ensure a camera is properly connected or integrated.');
+            } else if (error.name === 'NotReadableError') {
+                alert('Camera is currently being used by another application. Please close that application and try again.');
+            } else if (error.name === 'OverconstrainedError') {
+                alert('No camera matches the requested constraints. This might be an internal error with selecting the camera.');
+            } else {
+                alert('An unknown error occurred when trying to access the camera.');
+            }
+        });
 }
 
 getCameras();
