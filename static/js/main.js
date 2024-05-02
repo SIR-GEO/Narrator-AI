@@ -25,7 +25,15 @@ function switchCamera() {
     stopCurrentVideoStream();
     currentDeviceIndex = (currentDeviceIndex + 1) % allCameras.length;
     const deviceId = allCameras[currentDeviceIndex].deviceId;
-    navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } } })
+    const constraints = {
+        video: {
+            deviceId: { exact: deviceId },
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+        }
+    };
+
+    navigator.mediaDevices.getUserMedia(constraints)
         .then(stream => {
             currentStream = stream;
             cameraFeedElement.srcObject = stream;
@@ -41,7 +49,7 @@ function switchCamera() {
             } else if (error.name === 'NotReadableError') {
                 alert('Camera is currently being used by another application. Please close that application and try again.');
             } else if (error.name === 'OverconstrainedError') {
-                alert('No camera matches the requested constraints. This might be an internal error with selecting the camera.');
+                alert('No camera matches the requested constraints. Please adjust the settings or try a different camera.');
             } else {
                 alert('An unknown error occurred when trying to access the camera.');
             }
