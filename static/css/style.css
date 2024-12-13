@@ -3,16 +3,20 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    height: 100vh;
+    justify-content: flex-start;
+    min-height: 100vh;
     margin: 0;
     background-color: #f0f0f0;
+    padding: 10px;
+    box-sizing: border-box;
 }
 
 #camera-feed {
     border: 3px solid #333;
-    width: 640px;
-    height: 480px;
+    width: 100%;
+    max-width: 640px;
+    height: auto;
+    aspect-ratio: 4/3;
     background-color: #000;
 }
 
@@ -64,13 +68,16 @@ body {
 }
 
 #feedback {
-    max-width: 1500px;
+    width: 100%;
+    max-width: 800px;
     margin-top: 20px;
-    padding-left: 20px;
-    padding-right: 20px;
+    padding: 10px;
     text-align: left;
-    max-height: 100px;
+    max-height: 200px;
     overflow-y: auto;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 #feedback img {
@@ -82,8 +89,9 @@ body {
 }
 
 #feedback p {
-    margin-top: 10px;
-    color: #333;
+    margin: 8px 0;
+    line-height: 1.4;
+    word-wrap: break-word;
 }
 
 .switch {
@@ -145,25 +153,31 @@ body {
 }
 
 #captured-images {
-  display: flex;
-  overflow-x: auto;
-  margin-top: 20px;
-  max-width: 600px; /* Set the maximum width */
-  white-space: nowrap; /* Keep images in a single line */
-  scroll-snap-type: x mandatory; /* Enable scroll snap along the x-axis and make it mandatory */
+    width: 100%;
+    max-width: 800px;
+    overflow-x: auto;
+    margin: 10px 0;
+    padding: 10px;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    -webkit-overflow-scrolling: touch;
 }
 
 #captured-images .image-wrapper {
-  flex: 0 0 100px; /* Do not grow, do not shrink, base width of 100px */
-  margin-right: 5px;
-  position: relative;
-  display: inline-flex; /* Use inline-flex to keep the wrapper inline */
-  scroll-snap-align: start; /* Optional: Enhances the scrolling experience */
+    flex: 0 0 120px;
+    margin-right: 10px;
+    position: relative;
+    height: 90px;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 #captured-images .image-wrapper img {
-  max-width: 100%; /* Ensure images do not exceed the width of their wrappers */
-  height: auto; /* Maintain aspect ratio */
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 #captured-images .image-wrapper::after {
@@ -196,4 +210,61 @@ body {
 
 #toggle-camera-btn:hover {
   background-color: #e68900; /* Darker shade of orange on hover */
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+    #voice-selection button {
+        padding: 8px 16px;
+        font-size: 14px;
+        margin: 3px;
+    }
+
+    #feedback {
+        max-height: 150px;
+        font-size: 14px;
+    }
+
+    #captured-images .image-wrapper {
+        flex: 0 0 100px;
+        height: 75px;
+    }
+
+    #captured-images .image-wrapper::after {
+        font-size: 10px;
+        padding: 1px 3px;
+    }
+
+    #start-btn, #toggle-camera-btn {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+}
+
+/* Make text more readable on mobile */
+#feedback p {
+    margin: 8px 0;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+/* Improve scrollbar appearance */
+#feedback::-webkit-scrollbar, #captured-images::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+#feedback::-webkit-scrollbar-thumb, #captured-images::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 3px;
+}
+
+#feedback::-webkit-scrollbar-track, #captured-images::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+}
+
+/* Ensure buttons are touch-friendly */
+button {
+    min-height: 44px;
+    min-width: 44px;
 }
