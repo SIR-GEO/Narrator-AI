@@ -24,12 +24,13 @@ async def websocket_narrate(websocket: WebSocket):
             image_data = data_json.get('image')
             selected_voice_id = data_json.get('voiceId')
             selected_voice_name = data_json.get('voiceName')
+            politeness_level = int(data_json.get('politenessLevel', 5))
             if image_data:
-                print(f"Image data received, sending to {selected_voice_name} model for analysis.")
+                print(f"Image data received, sending to {selected_voice_name} model for analysis with politeness level {politeness_level}.")
                 description_accumulator = ""
                 punctuation_pattern = re.compile(r"[*]")
                 
-                async for description_chunk in generate_description(image_data, selected_voice_name, description_history):
+                async for description_chunk in generate_description(image_data, selected_voice_name, description_history, politeness_level):
                     if description_chunk:
                         # Accumulate the chunk, ensuring not to break on single punctuation marks
                         if not punctuation_pattern.fullmatch(description_chunk.strip()):

@@ -3,6 +3,7 @@ let ws;
 let currentStream = null;
 let currentDeviceIndex = 0;
 let allCameras = [];
+let politenessLevel = 5;
 
 function stopCurrentVideoStream() {
     if (currentStream) {
@@ -164,7 +165,13 @@ function captureAndAnalyseImage() {
     capturedImagesContainer.scrollLeft = capturedImagesContainer.scrollWidth;
 
     if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ image: imageDataUrl.split(',')[1], voiceId: selectedVoiceId, voiceName: selectedVoiceName, pictureCount: pictureCount }));
+        ws.send(JSON.stringify({ 
+            image: imageDataUrl.split(',')[1], 
+            voiceId: selectedVoiceId, 
+            voiceName: selectedVoiceName, 
+            pictureCount: pictureCount,
+            politenessLevel: politenessLevel 
+        }));
     } else {
         console.error("WebSocket is not open.");
     }
@@ -246,3 +253,15 @@ document.getElementById('start-btn').addEventListener('click', captureAndAnalyse
 initWebSocket();
 
 let pictureCount = 0;
+
+document.getElementById('politeness-slider').addEventListener('input', function() {
+    politenessLevel = parseInt(this.value);
+    const valueDisplay = document.getElementById('politeness-value');
+    valueDisplay.textContent = this.value;
+    valueDisplay.setAttribute('data-level', this.value);
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const valueDisplay = document.getElementById('politeness-value');
+    valueDisplay.setAttribute('data-level', '5');
+});

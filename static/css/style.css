@@ -268,3 +268,87 @@ button {
     min-height: 44px;
     min-width: 44px;
 }
+
+#politeness-control {
+    width: 100%;
+    max-width: 300px;
+    margin: 20px auto;
+    text-align: center;
+}
+
+#politeness-control label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #333;
+}
+
+#politeness-slider {
+    width: 100%;
+    height: 8px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: linear-gradient(to right, 
+        #1a237e 0%,     /* Ultra formal - Deep blue */
+        #4CAF50 20%,    /* Polite - Green */
+        #FFC107 40%,    /* Casual - Yellow */
+        #FF9800 60%,    /* Playful - Orange */
+        #f44336 80%,    /* Snarky - Red */
+        #e91e63 100%    /* Santa - Festive red */
+    );
+    outline: none;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+#politeness-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border: 2px solid #333;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+#politeness-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border: 2px solid #333;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.slider-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #666;
+}
+
+#politeness-value {
+    font-weight: bold;
+    color: #333;
+}
+
+#politeness-value::after {
+    content: " - ";
+    margin-right: 4px;
+}
+
+#politeness-value[data-level="1"]::after { content: " - Ultra Formal"; }
+#politeness-value[data-level="2"]::after { content: " - Very Proper"; }
+#politeness-value[data-level="3"]::after { content: " - Professional"; }
+#politeness-value[data-level="4"]::after { content: " - Friendly"; }
+#politeness-value[data-level="5"]::after { content: " - Conversational"; }
+#politeness-value[data-level="6"]::after { content: " - Casual"; }
+#politeness-value[data-level="7"]::after { content: " - Playful"; }
+#politeness-value[data-level="8"]::after { content: " - Sarcastic"; }
+#politeness-value[data-level="9"]::after { content: " - Cheeky"; }
+#politeness-value[data-level="10"]::after { content: " - Snarky"; }
+#politeness-value[data-level="11"]::after { content: " - Santa Mode! 🎅"; }
