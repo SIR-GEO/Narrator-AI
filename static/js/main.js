@@ -1,3 +1,43 @@
+// Add browser compatibility checks at the start of the file
+if (!navigator.mediaDevices) {
+    navigator.mediaDevices = {};
+}
+
+// Polyfill getUserMedia
+if (!navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia = function(constraints) {
+        const getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+        if (!getUserMedia) {
+            return Promise.reject(new Error('getUserMedia is not supported in this browser'));
+        }
+
+        return new Promise((resolve, reject) => {
+            getUserMedia.call(navigator, constraints, resolve, reject);
+        });
+    };
+}
+
+// Add mobile-specific camera constraints
+function getMobileConstraints(deviceId) {
+    const constraints = {
+        video: {
+            deviceId: deviceId ? { exact: deviceId } : undefined,
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: { ideal: "environment" }  // Prefer back camera on mobile
+        }
+    };
+
+    // Add iOS-specific constraints
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        constraints.video.width = { max: 1280 };
+        constraints.video.height = { max: 720 };
+    }
+
+    return constraints;
+}
+
 const cameraFeedElement = document.getElementById('camera-feed');
 let ws;
 let currentStream = null;
@@ -26,18 +66,18 @@ function switchCamera() {
     stopCurrentVideoStream();
     currentDeviceIndex = (currentDeviceIndex + 1) % allCameras.length;
     const deviceId = allCameras[currentDeviceIndex].deviceId;
-    const constraints = {
-        video: {
-            deviceId: deviceId,
-            width: { ideal: 640 },
-            height: { ideal: 480 }
-        }
-    };
+    const constraints = getMobileConstraints(deviceId);
 
     navigator.mediaDevices.getUserMedia(constraints)
         .then(stream => {
             currentStream = stream;
-            cameraFeedElement.srcObject = stream;
+            try {
+                cameraFeedElement.srcObject = stream;
+            } catch (error) {
+                // Fallback for older browsers
+                const videoURL = window.URL || window.webkitURL;
+                cameraFeedElement.src = videoURL.createObjectURL(stream);
+            }
         })
         .catch(error => {
             console.error("Could not switch camera:", error);
@@ -96,14 +136,38 @@ function playNextAudio() {
     if (audioQueue.length > 0) {
         isPlaying = true;
         const url = URL.createObjectURL(audioQueue.shift());
-        const audio = new Audio(url);
-        audio.play().then(() => {
-            audio.addEventListener('ended', playNextAudio);
-        }).catch(e => {
-            console.error("Error playing audio:", e);
+        const audio = new Audio();
+        
+        // iOS requires user interaction before playing audio
+        audio.setAttribute('playsinline', '');
+        audio.setAttribute('webkit-playsinline', '');
+        
+        audio.src = url;
+        
+        // Add error handling for audio playback
+        audio.onerror = (e) => {
+            console.error("Audio playback error:", e);
             isPlaying = false;
             playNextAudio();
-        });
+        };
+
+        // Ensure proper cleanup
+        audio.onended = () => {
+            URL.revokeObjectURL(url);
+            audio.onended = null;
+            audio.onerror = null;
+            playNextAudio();
+        };
+
+        // Handle iOS audio playback
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.error("Audio playback failed:", error);
+                isPlaying = false;
+                playNextAudio();
+            });
+        }
     } else {
         isPlaying = false;
     }
@@ -141,68 +205,113 @@ function captureAndAnalyseImage() {
         return;
     }
 
-    const canvas = document.createElement('canvas');
-    canvas.width = cameraFeedElement.videoWidth;
-    canvas.height = cameraFeedElement.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(cameraFeedElement, 0, 0, canvas.width, canvas.height);
-    const imageDataUrl = canvas.toDataURL('image/jpeg');
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+        console.log("WebSocket is not connected. Attempting to reconnect...");
+        initWebSocket();
+        const feedbackElement = document.getElementById('feedback');
+        const p = document.createElement('p');
+        p.innerHTML = '<strong>Connecting to server...</strong>';
+        feedbackElement.appendChild(p);
+        return;
+    }
 
-    pictureCount++;
-    document.getElementById('picture-counter').textContent = `Pictures taken: ${pictureCount}`;
+    try {
+        const canvas = document.createElement('canvas');
+        canvas.width = cameraFeedElement.videoWidth;
+        canvas.height = cameraFeedElement.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(cameraFeedElement, 0, 0, canvas.width, canvas.height);
+        const imageDataUrl = canvas.toDataURL('image/jpeg');
 
-    const capturedImagesContainer = document.getElementById('captured-images');
-    const imgWrapper = document.createElement('div'); // Create a wrapper div for the image
-    imgWrapper.classList.add('image-wrapper'); // Add class for styling
-    imgWrapper.setAttribute('data-picture-number', `Picture ${pictureCount}`); // Set the picture number
+        pictureCount++;
+        document.getElementById('picture-counter').textContent = `Pictures taken: ${pictureCount}`;
 
-    const imgElement = document.createElement('img');
-    imgElement.src = imageDataUrl;
-    imgWrapper.appendChild(imgElement); // Append the image to the wrapper
-    capturedImagesContainer.appendChild(imgWrapper); // Append the wrapper to the container
+        const capturedImagesContainer = document.getElementById('captured-images');
+        const imgWrapper = document.createElement('div');
+        imgWrapper.classList.add('image-wrapper');
+        imgWrapper.setAttribute('data-picture-number', `Picture ${pictureCount}`);
 
-    // Scroll to the latest image
-    capturedImagesContainer.scrollLeft = capturedImagesContainer.scrollWidth;
+        const imgElement = document.createElement('img');
+        imgElement.src = imageDataUrl;
+        imgWrapper.appendChild(imgElement);
+        capturedImagesContainer.appendChild(imgWrapper);
 
-    if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ 
-            image: imageDataUrl.split(',')[1], 
-            voiceId: selectedVoiceId, 
-            voiceName: selectedVoiceName, 
+        capturedImagesContainer.scrollLeft = capturedImagesContainer.scrollWidth;
+
+        ws.send(JSON.stringify({
+            image: imageDataUrl.split(',')[1],
+            voiceId: selectedVoiceId,
+            voiceName: selectedVoiceName,
             pictureCount: pictureCount,
-            politenessLevel: politenessLevel 
+            politenessLevel: politenessLevel
         }));
-    } else {
-        console.error("WebSocket is not open.");
+    } catch (error) {
+        console.error("Error capturing/sending image:", error);
+        const feedbackElement = document.getElementById('feedback');
+        const p = document.createElement('p');
+        p.innerHTML = '<strong>Error capturing or sending image. Please try again.</strong>';
+        p.classList.add('error');
+        feedbackElement.appendChild(p);
     }
 }
 
-// Initialise WebSocket connection and event handlers
+// Update the WebSocket initialization and handling
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5;
+const RECONNECT_DELAY = 2000; // 2 seconds
+
 function initWebSocket() {
-    console.log(`wss://${window.location.host}/narrate`);
-    ws = new WebSocket(`wss://${window.location.host}/narrate`);
-    ws.binaryType = 'arraybuffer'; // Important for audio data
+    // Determine the correct WebSocket protocol based on the page protocol
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    const wsUrl = `${protocol}//${host}/narrate`;
+    
+    console.log(`Connecting to WebSocket at: ${wsUrl}`);
+    
+    // Close existing connection if any
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close(1000, "Intentional close for reconnection");
+    }
+
+    ws = new WebSocket(wsUrl);
+    ws.binaryType = 'arraybuffer';
 
     ws.onopen = () => {
-        console.log("WebSocket connection opened.");
-        // Now safe to send messages
+        console.log("WebSocket connection opened successfully");
+        reconnectAttempts = 0; // Reset reconnection attempts on successful connection
+        
+        // Show connection status to user
+        const feedbackElement = document.getElementById('feedback');
+        const p = document.createElement('p');
+        // p.innerHTML = '<strong>Connected to server</strong>';
+        feedbackElement.appendChild(p);
     };
 
     ws.onmessage = (event) => {
         if (typeof event.data === "string") {
-            const message = JSON.parse(event.data);
-            if (message.type === "text_chunk") {
-                let feedbackElement = document.getElementById('feedback');
-                let p = document.querySelector(`p[data-picture-count="${message.pictureCount}"]`);
-                if (!p) {
-                    p = document.createElement('p');
-                    const timestamp = new Date().toLocaleTimeString();
-                    p.setAttribute('data-picture-count', message.pictureCount);
-                    p.innerHTML = `<strong>[${timestamp}] [Picture ${message.pictureCount}] [${message.voiceName}]</strong> `;
+            try {
+                const message = JSON.parse(event.data);
+                if (message.type === "text_chunk") {
+                    let feedbackElement = document.getElementById('feedback');
+                    let p = document.querySelector(`p[data-picture-count="${message.pictureCount}"]`);
+                    if (!p) {
+                        p = document.createElement('p');
+                        const timestamp = new Date().toLocaleTimeString();
+                        p.setAttribute('data-picture-count', message.pictureCount);
+                        p.innerHTML = `<strong>[${timestamp}] [Picture ${message.pictureCount}] [${message.voiceName}]</strong> `;
+                        feedbackElement.appendChild(p);
+                    }
+                    p.innerHTML += `${message.data}`;
+                    feedbackElement.scrollTop = feedbackElement.scrollHeight;
+                } else if (message.type === "error") {
+                    const feedbackElement = document.getElementById('feedback');
+                    const p = document.createElement('p');
+                    p.innerHTML = `<strong>Error: ${message.data}</strong>`;
+                    p.classList.add('error');
                     feedbackElement.appendChild(p);
                 }
-                p.innerHTML += `${message.data}`;
-                feedbackElement.scrollTop = feedbackElement.scrollHeight;
+            } catch (error) {
+                console.error("Error parsing message:", error);
             }
         } else {
             playAudio(event.data);
@@ -211,11 +320,36 @@ function initWebSocket() {
 
     ws.onerror = (error) => {
         console.error("WebSocket error:", error);
+        handleConnectionError();
     };
 
-    ws.onclose = () => {
-        console.log("WebSocket connection closed.");
+    ws.onclose = (event) => {
+        console.log("WebSocket connection closed.", event.code, event.reason);
+        handleConnectionError();
     };
+}
+
+function handleConnectionError() {
+    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+        reconnectAttempts++;
+        const delay = RECONNECT_DELAY * Math.pow(2, reconnectAttempts - 1); // Exponential backoff
+        console.log(`Attempting to reconnect (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}) in ${delay/1000} seconds...`);
+        
+        // Show reconnection status to user
+        const feedbackElement = document.getElementById('feedback');
+        const p = document.createElement('p');
+        p.innerHTML = `<strong>Connection lost. Reconnecting... (Attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})</strong>`;
+        feedbackElement.appendChild(p);
+        
+        setTimeout(initWebSocket, delay);
+    } else {
+        console.log("Max reconnection attempts reached");
+        const feedbackElement = document.getElementById('feedback');
+        const p = document.createElement('p');
+        p.innerHTML = '<strong>Could not connect to server. Please refresh the page to try again.</strong>';
+        p.classList.add('error');
+        feedbackElement.appendChild(p);
+    }
 }
 
 // Add event listener to the start button for capturing and analysing the image

@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>AI Image Narrator</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="apple-touch-icon" sizes="180x180" href="/static/assets/apple-touch-icon.png">
@@ -11,8 +14,8 @@
     <link rel="manifest" href="/static/assets/site.webmanifest">
 </head>
 <body>
-    <video id="camera-feed" autoplay></video>
-    <div id="captured-images" style="display: flex; overflow-x: auto; margin-top: 20px;"></div>
+    <video id="camera-feed" autoplay playsinline webkit-playsinline></video>
+    <div id="captured-images" class="scrollable" style="display: flex; overflow-x: auto; margin-top: 20px;"></div>
     <div id="voice-selection">
         <button class="voice-btn" data-voice-id="0SQfBfjRCI4jQdnyrF5B" data-voice-name="Michael Caine">Michael Kaine 🎩</button>
         <button class="voice-btn" data-voice-id="dCEi3N1Obj1Pajpy0xtI" data-voice-name="Noah">Noah (Kind Narrator) 🌍</button>
@@ -22,7 +25,7 @@
         <button class="voice-btn" data-voice-id="bnvSNcvmOz9I0VhuOh58" data-voice-name="John Cleese">Jon Cheese 🧀</button>
         <button class="voice-btn" data-voice-id="g5Qp5bT7Dm1TIJecJuds" data-voice-name="Judi Dench">Judy Drench 🎭</button>
         <button class="voice-btn" data-voice-id="w642gnqphLNLyM1zH2eI" data-voice-name="Richard Hammond">Richard Hamed 🚗</button>
-        <button class="voice-btn" data-voice-id="fg2V8JkSjQ3TerdHrPxJ" data-voice-name="Santa Claus">Santa Claus 🎅</button>
+        <button class="voice-btn" data-voice-id="1wg2wOjdEWKA7yQD8Kca" data-voice-name="Santa Claus">Santa Claus 🎅</button>
     </div>
     <div id="politeness-control">
         <label for="politeness-slider">Personality Level: <span id="politeness-value">5</span></label>
@@ -42,7 +45,7 @@
         <span>Continuously Narrate</span>
         <button id="toggle-camera-btn">Toggle Camera</button>
     </div>
-    <div id="feedback"></div>
+    <div id="feedback" class="scrollable"></div>
     <script src="/static/js/main.js"></script>
 </body>
 </html>
