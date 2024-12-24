@@ -15,6 +15,17 @@
 </head>
 <body>
     <video id="camera-feed" autoplay playsinline webkit-playsinline></video>
+    <div class="camera-controls">
+        <button id="toggle-camera-btn">Toggle Camera</button>
+        <button id="start-btn">Single Narrate</button>
+        <div class="switch-container">
+            <label class="switch">
+                <input type="checkbox" id="continuous-narrate-toggle">
+                <span class="slider round"></span>
+            </label>
+            <span>Continuously Narrate</span>
+        </div>
+    </div>
     <div id="captured-images" class="scrollable" style="display: flex; overflow-x: auto; margin-top: 20px;"></div>
     <div id="voice-selection">
         <button class="voice-btn" data-voice-id="0SQfBfjRCI4jQdnyrF5B" data-voice-name="Michael Caine">Michael Kaine 🎩</button>
@@ -36,15 +47,6 @@
         </div>
     </div>
     <div id="picture-counter">Pictures taken: 0</div>
-    <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px;">
-        <button id="start-btn">Single Narrate</button>
-        <label class="switch">
-            <input type="checkbox" id="continuous-narrate-toggle">
-            <span class="slider round"></span>
-        </label>
-        <span>Continuously Narrate</span>
-        <button id="toggle-camera-btn">Toggle Camera</button>
-    </div>
     <div id="feedback" class="scrollable"></div>
     <script src="/static/js/main.js"></script>
 </body>
