@@ -17,6 +17,17 @@
     <video id="camera-feed" autoplay playsinline webkit-playsinline></video>
     <div class="camera-controls">
         <button id="toggle-camera-btn">Toggle Camera</button>
+        <button id="start-btn">Single Narrate</button>
+        <div class="switch-container">
+            <label class="switch">
+                <input type="checkbox" id="continuous-narrate-toggle">
+                <span class="slider round"></span>
+            </label>
+            <span>Continuously Narrate</span>
+        </div>
+    </div>
+    <div class="camera-controls">
+        <button id="toggle-camera-btn">Toggle Camera</button>
         <button id="start-btn">Press here, once you have selected a voice below</button>
     </div>
     <div id="captured-images" class="scrollable" style="display: flex; overflow-x: auto; margin-top: 20px;"></div>
