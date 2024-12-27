@@ -44,6 +44,14 @@ let currentStream = null;
 let currentDeviceIndex = 0;
 let allCameras = [];
 let politenessLevel = 5;
+let pictureCount = 0;
+let audioQueue = [];
+let isPlaying = false;
+let selectedVoiceName = "Daniel Attenborough";
+let selectedVoiceId;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5;
+const RECONNECT_DELAY = 2000; // 2 seconds
 
 function stopCurrentVideoStream() {
     if (currentStream) {
@@ -120,14 +128,12 @@ getCameras();
 
 document.getElementById('toggle-camera-btn').addEventListener('click', switchCamera);
 
-let audioQueue = [];
-let isPlaying = false;
-
 function playAudio(arrayBuffer) {
     console.log("Attempting to play audio", arrayBuffer);
     const blob = new Blob([arrayBuffer], { type: 'audio/mp3' });
     audioQueue.push(blob);
     if (!isPlaying) {
+        hideLoadingPopup();
         playNextAudio();
     }
 }
@@ -173,8 +179,6 @@ function playNextAudio() {
     }
 }
 
-let selectedVoiceName = "Daniel Attenborough";
-
 function selectVoice() {
     selectedVoiceId = this.getAttribute('data-voice-id');
     selectedVoiceName = this.getAttribute('data-voice-name');
@@ -193,15 +197,24 @@ document.querySelectorAll('.voice-btn').forEach(btn => {
     btn.addEventListener('click', selectVoice);
 });
 
-let selectedVoiceId;
+function showLoadingPopup() {
+    document.getElementById('loading-popup').style.display = 'flex';
+}
 
+function hideLoadingPopup() {
+    document.getElementById('loading-popup').style.display = 'none';
+}
 
+function scrollToVoiceSelection() {
+    document.getElementById('voice-selection').scrollIntoView({ behavior: 'smooth' });
+}
 
 function captureAndAnalyseImage() {
     if (!selectedVoiceId) {
         const feedbackElement = document.getElementById('feedback');
         feedbackElement.textContent = 'Please select a voice before narrating.';
         feedbackElement.classList.add('error');
+        scrollToVoiceSelection();
         return;
     }
 
@@ -214,6 +227,8 @@ function captureAndAnalyseImage() {
         feedbackElement.appendChild(p);
         return;
     }
+
+    showLoadingPopup();
 
     try {
         const canvas = document.createElement('canvas');
@@ -249,16 +264,11 @@ function captureAndAnalyseImage() {
         console.error("Error capturing/sending image:", error);
         const feedbackElement = document.getElementById('feedback');
         const p = document.createElement('p');
-        p.innerHTML = '<strong>Error capturing or sending image. Please try again.</strong>';
-        p.classList.add('error');
+        p.innerHTML = '<strong>Error:</strong> Failed to capture or send image.';
         feedbackElement.appendChild(p);
+        hideLoadingPopup();
     }
 }
-
-// Update the WebSocket initialization and handling
-let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 5;
-const RECONNECT_DELAY = 2000; // 2 seconds
 
 function initWebSocket() {
     // Determine the correct WebSocket protocol based on the page protocol
@@ -355,38 +365,8 @@ function handleConnectionError() {
 // Add event listener to the start button for capturing and analysing the image
 document.getElementById('start-btn').addEventListener('click', captureAndAnalyseImage);
 
-// Initialise WebSocket connection
+// Initialize WebSocket connection
 initWebSocket();
-
-let continuousNarrationInterval; // Holds the interval ID for continuous narration
-
-document.getElementById('continuous-narrate-toggle').addEventListener('change', function() {
-    if (this.checked) {
-        if (!selectedVoiceId) {
-            document.getElementById('feedback').textContent = 'Please select a voice before narrating.';
-            document.getElementById('feedback').classList.add('error');
-            this.checked = false;
-            return;
-        }
-        captureAndAnalyseImage(); // Send the first image immediately
-        if (!continuousNarrationInterval) {
-            continuousNarrationInterval = setInterval(captureAndAnalyseImage, 5000); // 5-second delay for subsequent images
-        }
-    } else {
-        if (continuousNarrationInterval) {
-            clearInterval(continuousNarrationInterval);
-            continuousNarrationInterval = null;
-        }
-    }
-});
-
-// Existing code for adding event listener to the start button
-document.getElementById('start-btn').addEventListener('click', captureAndAnalyseImage);
-
-// Initialise WebSocket connection
-initWebSocket();
-
-let pictureCount = 0;
 
 document.getElementById('politeness-slider').addEventListener('input', function() {
     politenessLevel = parseInt(this.value);
