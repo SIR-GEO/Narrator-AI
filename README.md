@@ -1,6 +1,6 @@
 # Narrator-AI
 
-The AI Image Narrator is an interactive web application that captures images from a user's webcam, analyses them, and generates a humorous description in the voice of a selected celebrity. The description is then converted to speech, providing an engaging and unique experience. This document outlines the system's components, setup, and usage.
+The AI Image Narrator is an interactive web application that captures images from a user's webcam, analyses them, and generates a humorous description in the voice of a selected celebrity inspired voice. The description is then converted to speech, providing an engaging and unique experience. This document outlines the system's components, setup, and usage.
 
 The aim is to create a real-time interface between streaming the text description and streaming the text to speech as the text is generated.
 
