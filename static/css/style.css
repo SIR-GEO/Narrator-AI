@@ -335,8 +335,7 @@ button {
         #4CAF50 20%,    /* Polite - Green */
         #FFC107 40%,    /* Casual - Yellow */
         #FF9800 60%,    /* Playful - Orange */
-        #f44336 80%,    /* Snarky - Red */
-        #e91e63 100%    /* Santa - Festive red */
+        #f44336 100%    /* Snarky - Red */
     );
     outline: none;
     border-radius: 4px;
@@ -394,7 +393,6 @@ button {
 #politeness-value[data-level="8"]::after { content: " - Sarcastic"; }
 #politeness-value[data-level="9"]::after { content: " - Cheeky"; }
 #politeness-value[data-level="10"]::after { content: " - Snarky"; }
-#politeness-value[data-level="11"]::after { content: " - Santa Mode! 🎅"; }
 
 /* Add styles for iOS devices */
 @supports (-webkit-touch-callout: none) {
@@ -489,4 +487,40 @@ button {
         justify-content: center;
         gap: 8px;
     }
+}
+
+.loading-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.loading-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 10px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
