@@ -1,3 +1,5 @@
+### Available to play with for free: https://huggingface.co/spaces/Mr-Geo/ai-narrator
+
 # Narrator-AI
 
 The AI Image Narrator is an interactive web application that captures images from a user's webcam, analyses them, and generates a humorous description in the voice of a selected celebrity inspired voice. The description is then converted to speech, providing an engaging and unique experience. This document outlines the system's components, setup, and usage.
