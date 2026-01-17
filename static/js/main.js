@@ -47,7 +47,8 @@ let politenessLevel = 5;
 let pictureCount = 0;
 let audioQueue = [];
 let isPlaying = false;
-let selectedVoiceName = "Daniel Attenborough";
+let selectedVoiceName = null;
+let selectedVoiceLabel = null;
 let selectedVoiceId;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 5;
@@ -181,6 +182,7 @@ function playNextAudio() {
 
 function selectVoice() {
     selectedVoiceName = this.getAttribute('data-voice-name');
+    selectedVoiceLabel = this.getAttribute('data-voice-label') || selectedVoiceName;
     selectedVoiceId = selectedVoiceName; // Use voice name as ID for XTTS
     document.querySelectorAll('.voice-btn').forEach(btn => btn.classList.remove('selected'));
     this.classList.add('selected');
@@ -271,6 +273,7 @@ function captureAndAnalyseImage() {
             image: imageDataUrl.split(',')[1],
             voiceId: selectedVoiceId,
             voiceName: selectedVoiceName,
+            voiceLabel: selectedVoiceLabel,
             pictureCount: pictureCount,
             politenessLevel: politenessLevel
         }));
@@ -316,16 +319,14 @@ function initWebSocket() {
             try {
                 const message = JSON.parse(event.data);
                 if (message.type === "text_chunk") {
-                    // Update loading message to show we're generating voice
-                    updateLoadingMessage("Generating voice...", "This may take 5-10 seconds");
-                    
                     let feedbackElement = document.getElementById('feedback');
                     let p = document.querySelector(`p[data-picture-count="${message.pictureCount}"]`);
                     if (!p) {
                         p = document.createElement('p');
                         const timestamp = new Date().toLocaleTimeString();
                         p.setAttribute('data-picture-count', message.pictureCount);
-                        p.innerHTML = `<strong>[${timestamp}] [Picture ${message.pictureCount}] [${message.voiceName}]</strong> `;
+                        const voiceLabel = message.voiceLabel || message.voiceName;
+                        p.innerHTML = `<strong>[${timestamp}] [Picture ${message.pictureCount}] [${voiceLabel}]</strong> `;
                         feedbackElement.appendChild(p);
                     }
                     p.innerHTML += `${message.data}`;
@@ -340,6 +341,8 @@ function initWebSocket() {
                 } else if (message.type === "status") {
                     // Handle status updates from backend
                     updateLoadingMessage(message.message, message.detail || "");
+                } else if (message.type === "voice_status") {
+                    updateVoiceStatusIndicators(message.data);
                 }
             } catch (error) {
                 console.error("Error parsing message:", error);
@@ -381,6 +384,30 @@ function handleConnectionError() {
         p.classList.add('error');
         feedbackElement.appendChild(p);
     }
+}
+
+function updateVoiceStatusIndicators(statuses) {
+    if (!statuses) {
+        return;
+    }
+    document.querySelectorAll('.voice-btn').forEach(btn => {
+        const voiceName = btn.getAttribute('data-voice-name');
+        const dot = btn.querySelector('.voice-status-dot');
+        if (!dot) {
+            return;
+        }
+        const status = statuses[voiceName] || 'unknown';
+        dot.setAttribute('data-status', status);
+        if (status === 'ready') {
+            dot.title = 'Ready';
+        } else if (status === 'partial') {
+            dot.title = 'Samples available (slower on first use)';
+        } else if (status === 'missing') {
+            dot.title = 'No samples found';
+        } else {
+            dot.title = 'Status unknown';
+        }
+    });
 }
 
 // Add event listener to the start button for capturing and analysing the image

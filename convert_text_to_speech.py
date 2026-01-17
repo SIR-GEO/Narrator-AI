@@ -22,6 +22,19 @@ VOICE_FOLDERS = {
     "Stephen Fry": "Voice_Files/Stephen Fry",
 }
 
+VOICE_DISPLAY_NAMES = [
+    "Clarkson",
+    "David Attenborough",
+    "Richard Hammond",
+    "James May",
+    "John Cleese",
+    "Michael Caine",
+    "Morgan Freeman",
+    "Joanna Lumley",
+    "Judi Dench",
+    "Stephen Fry",
+]
+
 _tts_model = None
 _embeddings_cache = {}
 _embeddings_preloaded = False
@@ -104,6 +117,24 @@ def load_voice_embedding(voice_name):
     
     return None
 
+def get_voice_asset_status(voice_name):
+    """Return readiness status for a voice based on available assets."""
+    safe_name = voice_name.replace(" ", "_")
+    gpt_path = f"voice_embeddings/{safe_name}_gpt.pth"
+    speaker_path = f"voice_embeddings/{safe_name}_speaker.pth"
+    has_embedding = os.path.exists(gpt_path) and os.path.exists(speaker_path)
+    has_voice_files = voice_name in VOICE_FOLDERS and os.path.exists(VOICE_FOLDERS[voice_name])
+
+    if has_embedding:
+        return "ready"
+    if has_voice_files:
+        return "partial"
+    return "missing"
+
+def get_voice_statuses():
+    """Return status for each voice button."""
+    return {voice_name: get_voice_asset_status(voice_name) for voice_name in VOICE_DISPLAY_NAMES}
+
 def get_voice_files(voice_name):
     folder = VOICE_FOLDERS.get(voice_name, "Voice_Files/David Attenborough")
     if not os.path.exists(folder):
@@ -178,10 +209,8 @@ async def convert_text_to_speech(text, voice_name):
             buffer.seek(0)
         audio_data = buffer.getvalue()
         
-        # Stream in chunks
-        chunk_size = 4096
-        for i in range(0, len(audio_data), chunk_size):
-            yield audio_data[i:i + chunk_size]
+        # Send as a single chunk to avoid stutter
+        yield audio_data
             
     except Exception as e:
         print(f"TTS error: {e}")
