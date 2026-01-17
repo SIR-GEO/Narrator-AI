@@ -1,10 +1,10 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import json
-from generate_description import generate_description
-from convert_text_to_speech import convert_text_to_speech, get_voice_statuses, get_voice_asset_status, is_tts_ready
-import re
 import asyncio
 import time
+
+from generate_description import generate_description
+from convert_text_to_speech import convert_text_to_speech, get_voice_statuses, get_voice_asset_status, is_tts_ready
 
 router = APIRouter()
 
@@ -15,6 +15,7 @@ async def websocket_narrate(websocket: WebSocket):
     await websocket.accept()
     print("WebSocket connection accepted.")
     print("connection open")
+
     try:
         await websocket.send_text(json.dumps({
             "type": "voice_status",
@@ -42,10 +43,10 @@ async def websocket_narrate(websocket: WebSocket):
                     break
 
                 data_json = json.loads(data)
-                image_data = data_json.get('image')
-                selected_voice_name = data_json.get('voiceName')
-                selected_voice_label = data_json.get('voiceLabel', selected_voice_name)
-                politeness_level = int(data_json.get('politenessLevel', 5))
+                image_data = data_json.get("image")
+                selected_voice_name = data_json.get("voiceName")
+                selected_voice_label = data_json.get("voiceLabel", selected_voice_name)
+                politeness_level = int(data_json.get("politenessLevel", 5))
                 
                 if not image_data:
                     await websocket.send_text(json.dumps({
@@ -61,7 +62,7 @@ async def websocket_narrate(websocket: WebSocket):
                     "detail": "Working on the description."
                 }))
                 
-                # Collect full description first (Claude is fast anyway)
+                # Collect full description first
                 full_description = ""
                 async for description_chunk in generate_description(image_data, selected_voice_name, description_history, politeness_level):
                     if description_chunk:
@@ -69,12 +70,12 @@ async def websocket_narrate(websocket: WebSocket):
                         await websocket.send_text(json.dumps({
                             "type": "text_chunk", 
                             "data": description_chunk, 
-                            "pictureCount": data_json.get('pictureCount'), 
+                            "pictureCount": data_json.get("pictureCount"), 
                             "voiceName": selected_voice_name,
                             "voiceLabel": selected_voice_label
                         }))
                 
-                # Generate audio for complete description (smoother, single audio file)
+                # Generate audio for complete description
                 if full_description.strip():
                     try:
                         voice_status = get_voice_asset_status(selected_voice_name)
