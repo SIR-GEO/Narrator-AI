@@ -25,7 +25,6 @@ VOICE_FOLDERS = {
 VOICE_DISPLAY_NAMES = [
     "Clarkson",
     "David Attenborough",
-    "Richard Hammond",
     "James May",
     "John Cleese",
     "Michael Caine",
@@ -38,6 +37,7 @@ VOICE_DISPLAY_NAMES = [
 _tts_model = None
 _embeddings_cache = {}
 _embeddings_preloaded = False
+_tts_ready = False
 
 def get_tts_model():
     global _tts_model
@@ -51,6 +51,28 @@ def get_tts_model():
         _tts_model = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(device)
         print(f"Model loaded on {device}")
     return _tts_model
+
+def warm_up_tts():
+    """Run a tiny inference to warm up the model."""
+    global _tts_ready
+    try:
+        tts = get_tts_model()
+        if _embeddings_cache:
+            voice_name = next(iter(_embeddings_cache.keys()))
+            embedding = _embeddings_cache[voice_name]
+            _ = tts.synthesizer.tts_model.inference(
+                text="Hi.",
+                language="en",
+                gpt_cond_latent=embedding['gpt_cond_latent'],
+                speaker_embedding=embedding['speaker_embedding']
+            )
+        _tts_ready = True
+    except Exception as e:
+        print(f"Warm-up failed: {e}")
+        _tts_ready = False
+
+def is_tts_ready():
+    return _tts_ready
 
 def preload_all_embeddings():
     """Preload all voice embeddings at startup for faster access"""

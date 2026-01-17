@@ -1,7 +1,7 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import json
 from generate_description import generate_description
-from convert_text_to_speech import convert_text_to_speech, get_voice_statuses, get_voice_asset_status
+from convert_text_to_speech import convert_text_to_speech, get_voice_statuses, get_voice_asset_status, is_tts_ready
 import re
 import asyncio
 import time
@@ -19,6 +19,10 @@ async def websocket_narrate(websocket: WebSocket):
         await websocket.send_text(json.dumps({
             "type": "voice_status",
             "data": get_voice_statuses()
+        }))
+        await websocket.send_text(json.dumps({
+            "type": "server_ready",
+            "ready": is_tts_ready()
         }))
         await websocket.send_text(json.dumps({
             "type": "status",
@@ -91,7 +95,7 @@ async def websocket_narrate(websocket: WebSocket):
                                     "message": "Generating voice...",
                                     "detail": f"Elapsed: {elapsed}s (free tier can take 2–3 mins)"
                                 }))
-                                await asyncio.sleep(5)
+                                await asyncio.sleep(1)
 
                         progress_task = asyncio.create_task(progress_updates())
                         try:

@@ -53,6 +53,8 @@ let selectedVoiceId;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_DELAY = 2000; // 2 seconds
+let serverStatus = 'offline';
+let serverReady = false;
 
 function stopCurrentVideoStream() {
     if (currentStream) {
@@ -237,6 +239,7 @@ function captureAndAnalyseImage() {
     if (!ws || ws.readyState !== WebSocket.OPEN) {
         console.log("WebSocket is not connected. Attempting to reconnect...");
         initWebSocket();
+        updateServerStatus('connecting');
         const feedbackElement = document.getElementById('feedback');
         const p = document.createElement('p');
         p.innerHTML = '<strong>Connecting to server...</strong>';
@@ -306,6 +309,7 @@ function initWebSocket() {
     ws.onopen = () => {
         console.log("WebSocket connection opened successfully");
         reconnectAttempts = 0; // Reset reconnection attempts on successful connection
+        updateServerStatus('online');
         
         // Show connection status to user
         const feedbackElement = document.getElementById('feedback');
@@ -343,6 +347,9 @@ function initWebSocket() {
                     updateLoadingMessage(message.message, message.detail || "");
                 } else if (message.type === "voice_status") {
                     updateVoiceStatusIndicators(message.data);
+                } else if (message.type === "server_ready") {
+                    serverReady = message.ready === true;
+                    updateReadyState();
                 }
             } catch (error) {
                 console.error("Error parsing message:", error);
@@ -354,11 +361,13 @@ function initWebSocket() {
 
     ws.onerror = (error) => {
         console.error("WebSocket error:", error);
+        updateServerStatus('connecting');
         handleConnectionError();
     };
 
     ws.onclose = (event) => {
         console.log("WebSocket connection closed.", event.code, event.reason);
+        updateServerStatus('offline');
         handleConnectionError();
     };
 }
@@ -368,6 +377,7 @@ function handleConnectionError() {
         reconnectAttempts++;
         const delay = RECONNECT_DELAY * Math.pow(2, reconnectAttempts - 1); // Exponential backoff
         console.log(`Attempting to reconnect (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}) in ${delay/1000} seconds...`);
+        updateServerStatus('connecting');
         
         // Show reconnection status to user
         const feedbackElement = document.getElementById('feedback');
@@ -378,6 +388,7 @@ function handleConnectionError() {
         setTimeout(initWebSocket, delay);
     } else {
         console.log("Max reconnection attempts reached");
+        updateServerStatus('offline');
         const feedbackElement = document.getElementById('feedback');
         const p = document.createElement('p');
         p.innerHTML = '<strong>Could not connect to server. Please refresh the page to try again.</strong>';
@@ -410,8 +421,38 @@ function updateVoiceStatusIndicators(statuses) {
     });
 }
 
+function updateServerStatus(status) {
+    serverStatus = status;
+    const dot = document.querySelector('.server-status-dot');
+    const label = document.querySelector('.server-status-label');
+    if (!dot || !label) {
+        return;
+    }
+    dot.setAttribute('data-status', status);
+    if (status === 'online') {
+        label.textContent = 'Server: Online';
+    } else if (status === 'connecting') {
+        label.textContent = 'Server: Connecting...';
+    } else {
+        label.textContent = 'Server: Offline';
+    }
+}
+
+function updateReadyState() {
+    if (serverReady) {
+        startButton.disabled = false;
+        startButton.textContent = 'Press here, once you have selected a voice below';
+    } else {
+        startButton.disabled = true;
+        startButton.textContent = 'Warming up...';
+    }
+}
+
 // Add event listener to the start button for capturing and analysing the image
-document.getElementById('start-btn').addEventListener('click', captureAndAnalyseImage);
+const startButton = document.getElementById('start-btn');
+startButton.disabled = true;
+startButton.textContent = 'Warming up...';
+startButton.addEventListener('click', captureAndAnalyseImage);
 
 // Initialize WebSocket connection
 initWebSocket();

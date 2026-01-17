@@ -60,17 +60,22 @@ body {
 
 #voice-selection .voice-btn {
   font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 #voice-selection .voice-status-dot {
     display: inline-block;
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     margin-left: 8px;
     border-radius: 50%;
     background-color: #9e9e9e;
     border: 1px solid #666;
     vertical-align: middle;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
 }
 
 #voice-selection .voice-status-dot[data-status="ready"] {
@@ -86,6 +91,43 @@ body {
 #voice-selection .voice-status-dot[data-status="missing"] {
     background-color: #c62828;
     border-color: #8e0000;
+}
+
+.server-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    margin: 10px 0;
+    background-color: #ffffff;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    font-size: 14px;
+    color: #333;
+}
+
+.server-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #9e9e9e;
+    border: 1px solid #666;
+    display: inline-block;
+}
+
+.server-status-dot[data-status="online"] {
+    background-color: #2e7d32;
+    border-color: #1b5e20;
+}
+
+.server-status-dot[data-status="offline"] {
+    background-color: #c62828;
+    border-color: #8e0000;
+}
+
+.server-status-dot[data-status="connecting"] {
+    background-color: #f9a825;
+    border-color: #c17900;
 }
 
 #start-btn {

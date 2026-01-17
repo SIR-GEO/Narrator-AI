@@ -24,12 +24,14 @@ if os.path.exists("Voice_Files") and not os.path.exists("voice_embeddings"):
 
 # Pre-load TTS model and embeddings at startup
 print("Pre-loading XTTS model and voice embeddings...")
-from convert_text_to_speech import get_tts_model, preload_all_embeddings
+from convert_text_to_speech import get_tts_model, preload_all_embeddings, warm_up_tts, is_tts_ready
 try:
     get_tts_model()
     print("XTTS model pre-loaded!")
     preload_all_embeddings()
     print("All voice embeddings pre-loaded and ready!")
+    warm_up_tts()
+    print("XTTS warm-up complete!")
 except Exception as e:
     print(f"Failed to pre-load: {e}")
 
@@ -54,6 +56,10 @@ app.mount("/templates", StaticFiles(directory="templates"), name="templates")
 @app.get("/", response_class=HTMLResponse)
 async def get_root(request: Request):
     return FileResponse('templates/main.html')
+
+@app.get("/health")
+async def health():
+    return {"ready": is_tts_ready()}
 
 if __name__ == "__main__":
     import uvicorn
