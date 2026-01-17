@@ -45,9 +45,9 @@ def get_tts_model():
         print("Loading XTTS model...")
         device = "cuda" if torch.cuda.is_available() else "cpu"
         if device == "cpu":
-            # Optimize for CPU performance - increased threads
-            torch.set_num_threads(8)  # More threads for faster processing
-            torch.set_num_interop_threads(4)
+            # Optimise for 2 vCPU on HF free tier
+            torch.set_num_threads(2)
+            torch.set_num_interop_threads(1)
         _tts_model = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(device)
         print(f"Model loaded on {device}")
     return _tts_model
@@ -57,15 +57,18 @@ def warm_up_tts():
     global _tts_ready
     try:
         tts = get_tts_model()
-        if _embeddings_cache:
-            voice_name = next(iter(_embeddings_cache.keys()))
-            embedding = _embeddings_cache[voice_name]
-            _ = tts.synthesizer.tts_model.inference(
-                text="Hi.",
-                language="en",
-                gpt_cond_latent=embedding['gpt_cond_latent'],
-                speaker_embedding=embedding['speaker_embedding']
-            )
+        if not _embeddings_cache:
+            print("Warm-up skipped: no embeddings loaded yet")
+            _tts_ready = False
+            return
+        voice_name = next(iter(_embeddings_cache.keys()))
+        embedding = _embeddings_cache[voice_name]
+        _ = tts.synthesizer.tts_model.inference(
+            text="Hi.",
+            language="en",
+            gpt_cond_latent=embedding['gpt_cond_latent'],
+            speaker_embedding=embedding['speaker_embedding']
+        )
         _tts_ready = True
     except Exception as e:
         print(f"Warm-up failed: {e}")

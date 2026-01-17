@@ -9,11 +9,29 @@ import os
 os.environ["COQUI_TOS_AGREED"] = "1"
 
 import torch
+import torchaudio
+import soundfile as sf
+import librosa
 from TTS.api import TTS
 
-if os.path.exists("voice_embeddings") and len(os.listdir("voice_embeddings")) > 0:
-    print("Embeddings already exist, skipping setup")
-    exit(0)
+def _safe_audio_load(path):
+    """Fallback loader to avoid torchcodec/ffmpeg dependency."""
+    if not os.path.isfile(path):
+        raise FileNotFoundError(f"Missing audio file: {path}")
+    ext = os.path.splitext(path)[1].lower()
+    if ext in [".wav", ".flac", ".ogg"]:
+        data, sr = sf.read(path, always_2d=True)
+        data = torch.from_numpy(data.T).float()
+        return data, sr
+    audio, sr = librosa.load(path, sr=None, mono=False)
+    if audio.ndim == 1:
+        audio = audio[None, :]
+    data = torch.from_numpy(audio).float()
+    return data, sr
+
+torchaudio.load = _safe_audio_load
+
+GENERATE_MISSING_ONLY = True
 
 print("\nLoading XTTS model...")
 from TTS.api import TTS
@@ -41,6 +59,14 @@ print(f"\nProcessing {len(voice_folders)} voices...")
 for voice_name, folder_path in voice_folders.items():
     print(f"\n{voice_name}...", end=" ")
     
+    safe_name = voice_name.replace(" ", "_")
+    gpt_path = f"voice_embeddings/{safe_name}_gpt.pth"
+    speaker_path = f"voice_embeddings/{safe_name}_speaker.pth"
+
+    if GENERATE_MISSING_ONLY and os.path.exists(gpt_path) and os.path.exists(speaker_path):
+        print("already exists")
+        continue
+
     if not os.path.exists(folder_path):
         print("folder not found")
         continue
@@ -67,7 +93,6 @@ for voice_name, folder_path in voice_folders.items():
             max_ref_length=60
         )
         
-        safe_name = voice_name.replace(" ", "_")
         torch.save(gpt_cond_latent, f"voice_embeddings/{safe_name}_gpt.pth")
         torch.save(speaker_embedding, f"voice_embeddings/{safe_name}_speaker.pth")
         
