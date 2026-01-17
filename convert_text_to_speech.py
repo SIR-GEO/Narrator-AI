@@ -11,7 +11,6 @@ import asyncio
 
 # Voice to folder mapping
 VOICE_FOLDERS = {
-    "Clarkson": "Voice_Files/Clarkson",
     "David Attenborough": "Voice_Files/David Attenborough",
     "Joanna Lumley": "Voice_Files/Joanna Lumlee",
     "John Cleese": "Voice_Files/John Cleese",
@@ -23,7 +22,6 @@ VOICE_FOLDERS = {
 }
 
 VOICE_DISPLAY_NAMES = [
-    "Clarkson",
     "David Attenborough",
     "James May",
     "John Cleese",
