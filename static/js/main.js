@@ -180,8 +180,8 @@ function playNextAudio() {
 }
 
 function selectVoice() {
-    selectedVoiceId = this.getAttribute('data-voice-id');
     selectedVoiceName = this.getAttribute('data-voice-name');
+    selectedVoiceId = selectedVoiceName; // Use voice name as ID for XTTS
     document.querySelectorAll('.voice-btn').forEach(btn => btn.classList.remove('selected'));
     this.classList.add('selected');
 
@@ -197,12 +197,26 @@ document.querySelectorAll('.voice-btn').forEach(btn => {
     btn.addEventListener('click', selectVoice);
 });
 
-function showLoadingPopup() {
-    document.getElementById('loading-popup').style.display = 'flex';
+function showLoadingPopup(message = "Generating narration (turn up volume)...", detail = "") {
+    const popup = document.getElementById('loading-popup');
+    const messageEl = document.getElementById('loading-message');
+    const detailEl = document.getElementById('loading-detail');
+    
+    if (messageEl) messageEl.textContent = message;
+    if (detailEl) detailEl.textContent = detail;
+    popup.style.display = 'flex';
 }
 
 function hideLoadingPopup() {
     document.getElementById('loading-popup').style.display = 'none';
+}
+
+function updateLoadingMessage(message, detail = "") {
+    const messageEl = document.getElementById('loading-message');
+    const detailEl = document.getElementById('loading-detail');
+    
+    if (messageEl) messageEl.textContent = message;
+    if (detailEl) detailEl.textContent = detail;
 }
 
 function scrollToVoiceSelection() {
@@ -228,7 +242,7 @@ function captureAndAnalyseImage() {
         return;
     }
 
-    showLoadingPopup();
+    showLoadingPopup("Analysing image...", "Generating description with AI");
 
     try {
         const canvas = document.createElement('canvas');
@@ -302,6 +316,9 @@ function initWebSocket() {
             try {
                 const message = JSON.parse(event.data);
                 if (message.type === "text_chunk") {
+                    // Update loading message to show we're generating voice
+                    updateLoadingMessage("Generating voice...", "This may take 5-10 seconds");
+                    
                     let feedbackElement = document.getElementById('feedback');
                     let p = document.querySelector(`p[data-picture-count="${message.pictureCount}"]`);
                     if (!p) {
@@ -314,11 +331,15 @@ function initWebSocket() {
                     p.innerHTML += `${message.data}`;
                     feedbackElement.scrollTop = feedbackElement.scrollHeight;
                 } else if (message.type === "error") {
+                    hideLoadingPopup();
                     const feedbackElement = document.getElementById('feedback');
                     const p = document.createElement('p');
                     p.innerHTML = `<strong>Error: ${message.data}</strong>`;
                     p.classList.add('error');
                     feedbackElement.appendChild(p);
+                } else if (message.type === "status") {
+                    // Handle status updates from backend
+                    updateLoadingMessage(message.message, message.detail || "");
                 }
             } catch (error) {
                 console.error("Error parsing message:", error);

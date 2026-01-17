@@ -1,31 +1,190 @@
-from elevenlabs.client import ElevenLabs
 import os
-import httpx
-import time
 
-ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
+# Auto-agree to Coqui license for non-commercial use (MUST be before TTS import)
+os.environ["COQUI_TOS_AGREED"] = "1"
 
-elevenlabs_client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
+import io
+import torch
+import torchaudio
+from TTS.api import TTS
+import asyncio
 
-async def convert_text_to_speech(text, selected_voice_id):
+# Voice to folder mapping
+VOICE_FOLDERS = {
+    "Clarkson": "Voice_Files/Clarkson",
+    "David Attenborough": "Voice_Files/David Attenborough",
+    "Joanna Lumley": "Voice_Files/Joanna Lumlee",
+    "John Cleese": "Voice_Files/John Cleese",
+    "Judi Dench": "Voice_Files/Judi Dench",
+    "James May": "Voice_Files/May",
+    "Michael Caine": "Voice_Files/Michael Caine",
+    "Morgan Freeman": "Voice_Files/Morgan Freeman",
+    "Stephen Fry": "Voice_Files/Stephen Fry",
+}
+
+_tts_model = None
+_embeddings_cache = {}
+_embeddings_preloaded = False
+
+def get_tts_model():
+    global _tts_model
+    if _tts_model is None:
+        print("Loading XTTS model...")
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        if device == "cpu":
+            # Optimize for CPU performance - increased threads
+            torch.set_num_threads(8)  # More threads for faster processing
+            torch.set_num_interop_threads(4)
+        _tts_model = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(device)
+        print(f"Model loaded on {device}")
+    return _tts_model
+
+def preload_all_embeddings():
+    """Preload all voice embeddings at startup for faster access"""
+    global _embeddings_cache, _embeddings_preloaded
+    
+    if _embeddings_preloaded:
+        return
+    
+    print("Preloading all voice embeddings...")
+    embeddings_dir = "voice_embeddings"
+    
+    if not os.path.exists(embeddings_dir):
+        print("No embeddings directory found")
+        return
+    
+    # Find all voice embeddings
+    gpt_files = [f for f in os.listdir(embeddings_dir) if f.endswith("_gpt.pth")]
+    
+    for gpt_file in gpt_files:
+        voice_name = gpt_file.replace("_gpt.pth", "").replace("_", " ")
+        safe_name = voice_name.replace(" ", "_")
+        
+        gpt_path = f"{embeddings_dir}/{safe_name}_gpt.pth"
+        speaker_path = f"{embeddings_dir}/{safe_name}_speaker.pth"
+        
+        if os.path.exists(speaker_path):
+            try:
+                embedding = {
+                    'gpt_cond_latent': torch.load(gpt_path, map_location='cpu'),
+                    'speaker_embedding': torch.load(speaker_path, map_location='cpu')
+                }
+                _embeddings_cache[voice_name] = embedding
+                print(f"  Preloaded: {voice_name}")
+            except Exception as e:
+                print(f"  Failed: {voice_name} - {e}")
+    
+    _embeddings_preloaded = True
+    print(f"Preloaded {len(_embeddings_cache)} voice embeddings")
+
+def load_voice_embedding(voice_name):
+    """Load voice embedding (from cache if preloaded)"""
+    global _embeddings_cache
+    
+    # Return from cache if available
+    if voice_name in _embeddings_cache:
+        return _embeddings_cache[voice_name]
+    
+    # Try to load from disk
+    safe_name = voice_name.replace(" ", "_")
+    gpt_path = f"voice_embeddings/{safe_name}_gpt.pth"
+    speaker_path = f"voice_embeddings/{safe_name}_speaker.pth"
+    
+    if os.path.exists(gpt_path) and os.path.exists(speaker_path):
+        try:
+            embedding = {
+                'gpt_cond_latent': torch.load(gpt_path, map_location='cpu'),
+                'speaker_embedding': torch.load(speaker_path, map_location='cpu')
+            }
+            print(f"Loaded embedding for {voice_name}")
+            _embeddings_cache[voice_name] = embedding
+            return embedding
+        except Exception as e:
+            print(f"Failed to load embedding: {e}")
+    
+    return None
+
+def get_voice_files(voice_name):
+    folder = VOICE_FOLDERS.get(voice_name, "Voice_Files/David Attenborough")
+    if not os.path.exists(folder):
+        return ["Voice_Files/David Attenborough/david 1a.mp3"]
+    
+    files = []
+    for ext in ['.mp3', '.mp4', '.wav', '.m4a']:
+        files.extend([os.path.join(folder, f) for f in os.listdir(folder) if f.lower().endswith(ext)])
+    
+    return files[:3] if files else ["Voice_Files/David Attenborough/david 1a.mp3"]
+
+async def convert_text_to_speech(text, voice_name):
     try:
-        async with httpx.AsyncClient() as http_client:
-            response = await http_client.post(
-                f"https://api.elevenlabs.io/v1/text-to-speech/{selected_voice_id}/stream",
-                json={
-                    "model_id": "eleven_monolingual_v1",
-                    "text": text,
-                    "output_format": "mp3_44100_128"
-                },
-                headers={
-                    "Content-Type": "application/json",
-                    "xi-api-key": ELEVENLABS_API_KEY
-                },
-                timeout=None
-            )
-            # Stream the response content
-            async for chunk in response.aiter_bytes():
-                print(f"Received chunk: {len(chunk)} bytes at {time.time()}")
-                yield chunk
+        print(f"Generating speech: {voice_name}")
+        
+        loop = asyncio.get_event_loop()
+        
+        def generate():
+            import time
+            start = time.time()
+            
+            tts = get_tts_model()
+            embedding = load_voice_embedding(voice_name)
+            
+            if embedding:
+                print("Using pre-computed embedding")
+                # Use synthesizer directly with pre-computed embeddings
+                wav = tts.synthesizer.tts_model.inference(
+                    text=text,
+                    language="en",
+                    gpt_cond_latent=embedding['gpt_cond_latent'],
+                    speaker_embedding=embedding['speaker_embedding']
+                )
+                wav = wav["wav"]
+            else:
+                print("Computing embedding on-the-fly")
+                voice_files = get_voice_files(voice_name)
+                print(f"Using {len(voice_files)} voice file(s)")
+                
+                wav = tts.tts(
+                    text=text,
+                    speaker_wav=voice_files,
+                    language="en",
+                    split_sentences=False
+                )
+            
+            print(f"Generated in {time.time() - start:.1f}s")
+            return wav
+        
+        wav = await loop.run_in_executor(None, generate)
+        
+        # Convert to MP3
+        if not isinstance(wav, torch.Tensor):
+            wav = torch.FloatTensor(wav)
+        if wav.dim() == 1:
+            wav = wav.unsqueeze(0)
+        
+        buffer = io.BytesIO()
+        try:
+            # Try saving as MP3
+            torchaudio.save(buffer, wav, 24000, format="mp3")
+        except (ImportError, RuntimeError):
+            # Fallback: save as WAV first, then convert
+            import scipy.io.wavfile as wavfile
+            import numpy as np
+            wav_np = wav.cpu().numpy()
+            if wav_np.ndim > 1:
+                wav_np = wav_np[0]  # Take first channel if stereo
+            # Normalise to int16 range
+            wav_np = np.int16(wav_np / np.max(np.abs(wav_np)) * 32767)
+            wavfile.write(buffer, 24000, wav_np)
+            buffer.seek(0)
+        audio_data = buffer.getvalue()
+        
+        # Stream in chunks
+        chunk_size = 4096
+        for i in range(0, len(audio_data), chunk_size):
+            yield audio_data[i:i + chunk_size]
+            
     except Exception as e:
-        print(f"Error during text-to-speech conversion: {e}")
+        print(f"TTS error: {e}")
+        import traceback
+        traceback.print_exc()
+

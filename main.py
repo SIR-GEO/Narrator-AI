@@ -5,6 +5,33 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from narrate_description import router as narrate_description_router
+from download_embeddings import router as download_router
+import os
+
+# Auto-run embedding setup on first launch if needed
+if os.path.exists("Voice_Files") and not os.path.exists("voice_embeddings"):
+    print("\n" + "="*50)
+    print("FIRST LAUNCH: Setting up voice embeddings...")
+    print("="*50)
+    try:
+        import setup_embeddings_on_hf
+        print("\n" + "="*50)
+        print("Setup complete! Starting app...")
+        print("="*50 + "\n")
+    except Exception as e:
+        print(f"Setup failed: {e}")
+        print("App will use on-the-fly voice cloning (slower)")
+
+# Pre-load TTS model and embeddings at startup
+print("Pre-loading XTTS model and voice embeddings...")
+from convert_text_to_speech import get_tts_model, preload_all_embeddings
+try:
+    get_tts_model()
+    print("XTTS model pre-loaded!")
+    preload_all_embeddings()
+    print("All voice embeddings pre-loaded and ready!")
+except Exception as e:
+    print(f"Failed to pre-load: {e}")
 
 app = FastAPI()
 
@@ -18,6 +45,7 @@ app.add_middleware(
 )
 
 app.include_router(narrate_description_router)
+app.include_router(download_router)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 

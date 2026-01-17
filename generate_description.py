@@ -16,7 +16,6 @@ def get_politeness_prompt(politeness_level):
         8: "Be mildly sarcastic, with gentle teasing and witty observations.",
         9: "Be cheekily critical, using clever wordplay and humorous jabs.",
         10: "Be hilariously snarky, with maximum sass but keeping it playful.",
-        11: "Ho ho ho! Be jolly and merry like Santa Claus, using festive language and Christmas spirit!"
     }
     
     return prompts.get(politeness_level, "Be casual and straightforward, with a balanced tone.")

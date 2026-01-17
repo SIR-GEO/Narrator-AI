@@ -35,7 +35,6 @@ The system comprises a front-end web interface and a back-end server. The front-
    - Python dependencies: Run `pip install fastapi uvicorn httpx elevenlabs-client anthropic`.
    - Ensure you have Node.js installed for front-end dependencies.
 3. **Set Environment Variables**: Define the following environment variables:
-   - `ELEVENLABS_API_KEY`: Your API key for ElevenLabs.
    - `ANTHROPIC_API_KEY`: Your API key for Anthropic.
 4. **Start the Back-end Server**: Navigate to the project directory and run `uvicorn main:app --reload` to start the FastAPI server.
 5. **Access the Web Interface**: Open your browser and go to `http://localhost:8000` to view the application.

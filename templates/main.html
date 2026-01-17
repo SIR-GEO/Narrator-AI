@@ -23,18 +23,21 @@
     <div id="loading-popup" class="loading-popup" style="display: none;">
         <div class="loading-content">
             <div class="spinner"></div>
-            <p>Generating narration (turn up volume)...</p>
+            <p id="loading-message">Generating narration (turn up volume)...</p>
+            <p id="loading-detail" style="font-size: 0.9em; margin-top: 10px; opacity: 0.8;"></p>
         </div>
     </div>
     <div id="voice-selection">
-        <button class="voice-btn" data-voice-id="0SQfBfjRCI4jQdnyrF5B" data-voice-name="Michael Caine">Michael Kaine 🎩</button>
-        <button class="voice-btn" data-voice-id="dCEi3N1Obj1Pajpy0xtI" data-voice-name="Noah">Noah (Kind Narrator) 🌍</button>
-        <button class="voice-btn" data-voice-id="xbwI6GdPZTE9pULq0yjQ" data-voice-name="Philemon">Philemon (Serious Scientist) 📚</button>
-        <button class="voice-btn" data-voice-id="K8sG6kT7jA4WnERxh8vd" data-voice-name="Morgan Freeman">Morgan Free 🎤</button>
-        <button class="voice-btn" data-voice-id="WiXK0UI5GPQ98IYxy8he" data-voice-name="Joanna Lumley">Johanna Lumly 💄</button>
-        <button class="voice-btn" data-voice-id="bnvSNcvmOz9I0VhuOh58" data-voice-name="John Cleese">Jon Cheese 🧀</button>
-        <button class="voice-btn" data-voice-id="g5Qp5bT7Dm1TIJecJuds" data-voice-name="Judi Dench">Judy Drench 🎭</button>
-        <button class="voice-btn" data-voice-id="w642gnqphLNLyM1zH2eI" data-voice-name="Richard Hammond">Richard Hamed 🚗</button>
+        <button class="voice-btn" data-voice-name="Clarkson">Jeremy Clarkson 🚗</button>
+        <button class="voice-btn" data-voice-name="David Attenborough">David Attenborough 🌍</button>
+        <button class="voice-btn" data-voice-name="Richard Hammond">Richard Hammond 🏎️</button>
+        <button class="voice-btn" data-voice-name="James May">James May 🔧</button>
+        <button class="voice-btn" data-voice-name="John Cleese">John Cleese 🐍</button>
+        <button class="voice-btn" data-voice-name="Michael Caine">Michael Caine 🎩</button>
+        <button class="voice-btn" data-voice-name="Morgan Freeman">Morgan Freeman 🎤</button>
+        <button class="voice-btn" data-voice-name="Joanna Lumley">Joanna Lumley 💄</button>
+        <button class="voice-btn" data-voice-name="Judi Dench">Judi Dench 🎭</button>
+        <button class="voice-btn" data-voice-name="Stephen Fry">Stephen Fry 📚</button>
     </div>
     <div id="politeness-control">
         <label for="politeness-slider">Personality Level: <span id="politeness-value">5</span></label>
