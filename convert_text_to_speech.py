@@ -8,6 +8,11 @@ import torch
 import torchaudio
 from TTS.api import TTS
 import asyncio
+import base64
+
+# External GPU TTS provider (Modal Labs or similar)
+# Set MODAL_API_URL to your deployed Modal endpoint
+# Example: "https://your-username--xtts-api.modal.run"
 
 # Voice to folder mapping
 VOICE_FOLDERS = {
@@ -169,12 +174,100 @@ def get_voice_files(voice_name):
     
     return files[:3] if files else ["Voice_Files/David Attenborough/david 1a.mp3"]
 
+async def _convert_with_external_gpu(text, voice_name, total_start):
+    """Use external GPU service (Modal Labs) to run XTTS with voice embeddings"""
+    import time
+    import json
+    import base64
+    
+    api_url = os.getenv("MODAL_API_URL") or os.getenv("GPU_TTS_API_URL")
+    
+    if not api_url:
+        raise ValueError("MODAL_API_URL or GPU_TTS_API_URL not set")
+    
+    gpu_start = time.time()
+    
+    # Get voice embedding to send to GPU service
+    embedding = load_voice_embedding(voice_name)
+    
+    if not embedding:
+        raise ValueError(f"No embedding found for {voice_name}")
+    
+    print(f"  📡 Calling external GPU service: {api_url}")
+    print(f"  🎭 Using voice: {voice_name}")
+    
+    try:
+        # Prepare embedding data for transmission
+        # Convert tensors to base64 or send as JSON-serializable format
+        import torch
+        
+        # Serialize embeddings (convert tensors to lists for JSON)
+        embedding_data = {
+            'gpt_cond_latent': embedding['gpt_cond_latent'].cpu().numpy().tolist() if isinstance(embedding['gpt_cond_latent'], torch.Tensor) else embedding['gpt_cond_latent'],
+            'speaker_embedding': embedding['speaker_embedding'].cpu().numpy().tolist() if isinstance(embedding['speaker_embedding'], torch.Tensor) else embedding['speaker_embedding'],
+        }
+        
+        # Send request to GPU service
+        payload = {
+            'text': text,
+            'language': 'en',
+            'voice_name': voice_name,
+            'embedding': embedding_data
+        }
+        
+        import httpx
+        async with httpx.AsyncClient(timeout=120.0) as http_client:
+            # Modal endpoint is the full URL, no /tts needed
+            response = await http_client.post(
+                api_url,
+                json=payload,
+                headers={"Content-Type": "application/json"}
+            )
+            response.raise_for_status()
+            
+            # Response should be audio bytes or base64 encoded audio
+            if response.headers.get("content-type", "").startswith("audio/"):
+                audio_data = response.content
+            else:
+                # Try JSON response with base64 audio
+                result = response.json()
+                if 'audio' in result:
+                    audio_data = base64.b64decode(result['audio'])
+                else:
+                    audio_data = response.content
+        
+        gpu_time = time.time() - gpu_start
+        total_time = time.time() - total_start
+        
+        print(f"🎤 External GPU TTS COMPLETE: {total_time:.2f}s (API: {gpu_time:.2f}s, FREE GPU!)", flush=True)
+        
+        yield audio_data
+        
+    except Exception as e:
+        print(f"  ❌ External GPU API error: {e}", flush=True)
+        raise  # Re-raise to trigger fallback to local processing
+
 async def convert_text_to_speech(text, voice_name):
     try:
         import time
         total_start = time.time()
         print(f"🎤 Generating speech: {voice_name} (Text length: {len(text)} chars)")
         
+        # Check if external GPU service is configured
+        modal_url = os.getenv("MODAL_API_URL") or os.getenv("GPU_TTS_API_URL")
+        use_external_gpu = modal_url is not None
+        
+        if use_external_gpu:
+            try:
+                print("  🚀 Using external GPU service (free GPU, same XTTS model)")
+                async for chunk in _convert_with_external_gpu(text, voice_name, total_start):
+                    yield chunk
+                return
+            except Exception as e:
+                print(f"  ⚠️  External GPU service failed, falling back to local CPU: {e}")
+                # Fall through to local processing
+        
+        # Local CPU processing (original method)
         loop = asyncio.get_event_loop()
         
         def generate():

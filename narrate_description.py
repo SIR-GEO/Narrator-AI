@@ -92,6 +92,16 @@ async def websocket_narrate(websocket: WebSocket):
 
                         tts_start = time.time()
                         start_time = time.time()
+                        tts_mode = "CPU"
+
+                        async def status_cb(mode, detail):
+                            nonlocal tts_mode
+                            tts_mode = mode
+                            await websocket.send_text(json.dumps({
+                                "type": "status",
+                                "message": f"TTS: {mode}",
+                                "detail": detail
+                            }))
 
                         async def progress_updates():
                             while True:
@@ -99,13 +109,17 @@ async def websocket_narrate(websocket: WebSocket):
                                 await websocket.send_text(json.dumps({
                                     "type": "status",
                                     "message": "Generating voice...",
-                                    "detail": f"Elapsed: {elapsed}s (free tier can take 2–3 mins)"
+                                    "detail": f"Elapsed: {elapsed}s | Mode: {tts_mode} (free tier can take 2–3 mins)"
                                 }))
                                 await asyncio.sleep(1)
 
                         progress_task = asyncio.create_task(progress_updates())
                         try:
-                            audio_chunks = convert_text_to_speech(full_description.strip(), selected_voice_name)
+                            audio_chunks = convert_text_to_speech(
+                                full_description.strip(),
+                                selected_voice_name,
+                                status_cb=status_cb
+                            )
                             async for chunk in audio_chunks:
                                 await websocket.send_bytes(chunk)
                         finally:
