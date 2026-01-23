@@ -55,14 +55,16 @@ async def websocket_narrate(websocket: WebSocket):
                     }))
                     continue
 
-                print(f"Image data received, sending to {selected_voice_name} model for analysis with politeness level {politeness_level}.")
+                total_start = time.time()
+                print(f"🖼️ Image data received, sending to {selected_voice_name} model for analysis with politeness level {politeness_level}.")
                 await websocket.send_text(json.dumps({
                     "type": "status",
                     "message": "Analysing image...",
                     "detail": "Working on the description."
                 }))
                 
-                # Collect full description first
+                # Time description generation
+                desc_start = time.time()
                 full_description = ""
                 async for description_chunk in generate_description(image_data, selected_voice_name, description_history, politeness_level):
                     if description_chunk:
@@ -74,6 +76,8 @@ async def websocket_narrate(websocket: WebSocket):
                             "voiceName": selected_voice_name,
                             "voiceLabel": selected_voice_label
                         }))
+                desc_time = time.time() - desc_start
+                print(f"⏱️  Description generation: {desc_time:.2f}s", flush=True)
                 
                 # Generate audio for complete description
                 if full_description.strip():
@@ -86,6 +90,7 @@ async def websocket_narrate(websocket: WebSocket):
                                 "detail": "Using default voice for this request."
                             }))
 
+                        tts_start = time.time()
                         start_time = time.time()
 
                         async def progress_updates():
@@ -109,6 +114,12 @@ async def websocket_narrate(websocket: WebSocket):
                                 await progress_task
                             except asyncio.CancelledError:
                                 pass
+                        tts_time = time.time() - tts_start
+                        print(f"⏱️  TTS conversion: {tts_time:.2f}s", flush=True)
+                        
+                        total_time = time.time() - total_start
+                        print(f"⏱️  TOTAL PROCESSING TIME: {total_time:.2f}s (Description: {desc_time:.2f}s, TTS: {tts_time:.2f}s)", flush=True)
+                        
                         await websocket.send_text(json.dumps({
                             "type": "status",
                             "message": "Audio ready.",
@@ -122,7 +133,8 @@ async def websocket_narrate(websocket: WebSocket):
                             "data": "Error processing audio"
                         }))
 
-                print("Finished processing image data.")
+                total_time = time.time() - total_start
+                print(f"✅ Finished processing image data. Total time: {total_time:.2f}s", flush=True)
 
             except WebSocketDisconnect:
                 print("Client disconnected")

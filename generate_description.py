@@ -62,12 +62,12 @@ async def generate_description(image_data, selected_voice_name, description_hist
             async for event in stream.text_stream:
                 if first_chunk_time is None:
                     first_chunk_time = time.time() - api_start
-                    print(f"  ⏱️  First token received: {first_chunk_time:.2f}s")
+                    print(f"  ⏱️  First token received: {first_chunk_time:.2f}s", flush=True)
                 description += event
                 yield event
         
         total_desc_time = time.time() - desc_start
-        print(f"🖼️  Description complete: {total_desc_time:.2f}s (First token: {first_chunk_time:.2f}s if available)")
+        print(f"🖼️  Description complete: {total_desc_time:.2f}s (First token: {first_chunk_time:.2f}s if available)", flush=True)
     except Exception as e:
         print(f"❌ Error generating description: {e}")
         yield "Error generating description."

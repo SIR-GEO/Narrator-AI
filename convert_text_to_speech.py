@@ -213,7 +213,7 @@ async def convert_text_to_speech(text, voice_name):
                     split_sentences=False
                 )
             inference_time = time.time() - inference_start
-            print(f"  ⏱️  TTS Inference: {inference_time:.2f}s")
+            print(f"  ⏱️  TTS Inference: {inference_time:.2f}s", flush=True)
             return wav
         
         wav = await loop.run_in_executor(None, generate)
@@ -245,7 +245,7 @@ async def convert_text_to_speech(text, voice_name):
         encode_time = time.time() - encode_start
         
         total_tts_time = time.time() - total_start
-        print(f"🎤 TTS COMPLETE: {total_tts_time:.2f}s (Generation: {generation_time:.2f}s, Encoding: {encode_time:.2f}s)")
+        print(f"🎤 TTS COMPLETE: {total_tts_time:.2f}s (Generation: {generation_time:.2f}s, Encoding: {encode_time:.2f}s)", flush=True)
         
         # Send as a single chunk to avoid stutter
         yield audio_data
