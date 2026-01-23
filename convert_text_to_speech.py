@@ -247,27 +247,40 @@ async def _convert_with_external_gpu(text, voice_name, total_start):
         print(f"  ❌ External GPU API error: {e}", flush=True)
         raise  # Re-raise to trigger fallback to local processing
 
-async def convert_text_to_speech(text, voice_name):
+async def convert_text_to_speech(text, voice_name, status_cb=None):
     try:
         import time
         total_start = time.time()
         print(f"🎤 Generating speech: {voice_name} (Text length: {len(text)} chars)")
         
+        async def _emit_status(mode, detail):
+            if status_cb is None:
+                return
+            try:
+                result = status_cb(mode, detail)
+                if asyncio.iscoroutine(result):
+                    await result
+            except Exception:
+                pass
+
         # Check if external GPU service is configured
         modal_url = os.getenv("MODAL_API_URL") or os.getenv("GPU_TTS_API_URL")
         use_external_gpu = modal_url is not None
         
         if use_external_gpu:
             try:
+                await _emit_status("GPU", "Using external GPU service")
                 print("  🚀 Using external GPU service (free GPU, same XTTS model)")
                 async for chunk in _convert_with_external_gpu(text, voice_name, total_start):
                     yield chunk
                 return
             except Exception as e:
+                await _emit_status("CPU", "GPU unavailable, using local CPU")
                 print(f"  ⚠️  External GPU service failed, falling back to local CPU: {e}")
                 # Fall through to local processing
         
         # Local CPU processing (original method)
+        await _emit_status("CPU", "Using local CPU")
         loop = asyncio.get_event_loop()
         
         def generate():

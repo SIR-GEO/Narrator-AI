@@ -109,7 +109,7 @@ async def websocket_narrate(websocket: WebSocket):
                                 await websocket.send_text(json.dumps({
                                     "type": "status",
                                     "message": "Generating voice...",
-                                    "detail": f"Elapsed: {elapsed}s | Mode: {tts_mode} (free tier can take 2–3 mins)"
+                                    "detail": f"Elapsed: {elapsed}s | Mode: {tts_mode} (2–3 mins warm-up time, then good to go!)"
                                 }))
                                 await asyncio.sleep(1)
 

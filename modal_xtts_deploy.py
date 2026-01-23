@@ -28,11 +28,15 @@ image = (
 
 app = modal.App("xtts-tts-api")
 
+# Persist model downloads between runs to avoid cold-start re-downloads
+tts_cache = modal.Volume.from_name("xtts-model-cache", create_if_missing=True)
+
 @app.cls(
     image=image,
-    gpu="T4",  # T4 is cheaper and more available on free tier (A10G if you have credits)
-    scaledown_window=300,  # Updated from container_idle_timeout
-    timeout=600,
+    gpu="T4",  # Cheapest GPU option on Modal's free tier
+    scaledown_window=120,  # Keep warm for 2 minutes
+    timeout=900,
+    volumes={"/root/.local/share/tts": tts_cache},
 )
 class XTTSModel:
     @modal.enter()
@@ -47,6 +51,11 @@ class XTTSModel:
         print("Loading XTTS model on GPU...")
         self.tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to("cuda")
         print("XTTS model loaded!")
+        try:
+            # Persist downloaded model files for future runs
+            tts_cache.commit()
+        except Exception:
+            pass
     
     @modal.method()
     def tts(self, text: str, language: str = "en", embedding: dict = None):
