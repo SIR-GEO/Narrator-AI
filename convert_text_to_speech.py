@@ -171,19 +171,28 @@ def get_voice_files(voice_name):
 
 async def convert_text_to_speech(text, voice_name):
     try:
-        print(f"Generating speech: {voice_name}")
+        import time
+        total_start = time.time()
+        print(f"🎤 Generating speech: {voice_name} (Text length: {len(text)} chars)")
         
         loop = asyncio.get_event_loop()
         
         def generate():
-            import time
-            start = time.time()
-            
+            model_start = time.time()
             tts = get_tts_model()
-            embedding = load_voice_embedding(voice_name)
+            model_load_time = time.time() - model_start
+            if model_load_time > 0.1:
+                print(f"  ⏱️  Model access: {model_load_time:.2f}s")
             
+            embedding_start = time.time()
+            embedding = load_voice_embedding(voice_name)
+            embedding_time = time.time() - embedding_start
+            if embedding_time > 0.1:
+                print(f"  ⏱️  Embedding load: {embedding_time:.2f}s")
+            
+            inference_start = time.time()
             if embedding:
-                print("Using pre-computed embedding")
+                print("  ✓ Using pre-computed embedding")
                 # Use synthesizer directly with pre-computed embeddings
                 wav = tts.synthesizer.tts_model.inference(
                     text=text,
@@ -193,9 +202,9 @@ async def convert_text_to_speech(text, voice_name):
                 )
                 wav = wav["wav"]
             else:
-                print("Computing embedding on-the-fly")
+                print("  ⚠ Computing embedding on-the-fly")
                 voice_files = get_voice_files(voice_name)
-                print(f"Using {len(voice_files)} voice file(s)")
+                print(f"  Using {len(voice_files)} voice file(s)")
                 
                 wav = tts.tts(
                     text=text,
@@ -203,13 +212,15 @@ async def convert_text_to_speech(text, voice_name):
                     language="en",
                     split_sentences=False
                 )
-            
-            print(f"Generated in {time.time() - start:.1f}s")
+            inference_time = time.time() - inference_start
+            print(f"  ⏱️  TTS Inference: {inference_time:.2f}s")
             return wav
         
         wav = await loop.run_in_executor(None, generate)
+        generation_time = time.time() - total_start
         
         # Convert to MP3
+        encode_start = time.time()
         if not isinstance(wav, torch.Tensor):
             wav = torch.FloatTensor(wav)
         if wav.dim() == 1:
@@ -231,6 +242,10 @@ async def convert_text_to_speech(text, voice_name):
             wavfile.write(buffer, 24000, wav_np)
             buffer.seek(0)
         audio_data = buffer.getvalue()
+        encode_time = time.time() - encode_start
+        
+        total_tts_time = time.time() - total_start
+        print(f"🎤 TTS COMPLETE: {total_tts_time:.2f}s (Generation: {generation_time:.2f}s, Encoding: {encode_time:.2f}s)")
         
         # Send as a single chunk to avoid stutter
         yield audio_data

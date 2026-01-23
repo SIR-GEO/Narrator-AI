@@ -11,5 +11,4 @@ torchaudio==2.2.0
 transformers==4.38.0
 numpy==1.24.3
 scipy==1.11.4
-gradio==4.44.0
 pillow==10.4.0

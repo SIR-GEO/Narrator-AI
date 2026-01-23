@@ -21,14 +21,17 @@ def get_politeness_prompt(politeness_level):
     return prompts.get(politeness_level, "Be casual and straightforward, with a balanced tone.")
 
 async def generate_description(image_data, selected_voice_name, description_history, politeness_level=5):
+    import time
+    desc_start = time.time()
     client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
     try:
         politeness_instruction = get_politeness_prompt(politeness_level)
         system_prompt = f"""You are {selected_voice_name} and you must describe the image you are given in 15 words or less. {politeness_instruction}
         Please use only raw text without any special formatting characters like asterisks."""
         
-        print("System prompt:", system_prompt)
+        print(f"🖼️  Generating description as {selected_voice_name} (politeness: {politeness_level})")
 
+        api_start = time.time()
         async with client.messages.stream(
             model="claude-3-haiku-20240307",
             max_tokens=100,
@@ -55,10 +58,16 @@ async def generate_description(image_data, selected_voice_name, description_hist
             ]
         ) as stream:
             description = ""
+            first_chunk_time = None
             async for event in stream.text_stream:
-                print(event)
+                if first_chunk_time is None:
+                    first_chunk_time = time.time() - api_start
+                    print(f"  ⏱️  First token received: {first_chunk_time:.2f}s")
                 description += event
                 yield event
+        
+        total_desc_time = time.time() - desc_start
+        print(f"🖼️  Description complete: {total_desc_time:.2f}s (First token: {first_chunk_time:.2f}s if available)")
     except Exception as e:
-        print(f"Error generating description: {e}")
+        print(f"❌ Error generating description: {e}")
         yield "Error generating description."

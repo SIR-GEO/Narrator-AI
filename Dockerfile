@@ -10,4 +10,5 @@ COPY . /code
 
 EXPOSE 7860
 
+# Run FastAPI app with camera support (main.py)
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
