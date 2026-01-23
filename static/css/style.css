@@ -69,6 +69,11 @@ body {
     justify-content: center;
 }
 
+#voice-selection.needs-attention {
+    box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.35);
+    border-radius: 8px;
+}
+
 #voice-selection button {
     min-height: 44px;
     padding: 12px 20px;
@@ -180,6 +185,10 @@ body {
     background-color: white;
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#feedback.error {
+    border: 2px solid #c62828;
 }
 
 .loading-popup {

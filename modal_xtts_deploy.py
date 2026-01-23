@@ -34,8 +34,8 @@ tts_cache = modal.Volume.from_name("xtts-model-cache", create_if_missing=True)
 @app.cls(
     image=image,
     gpu="T4",  # Cheapest GPU option on Modal's free tier
-    scaledown_window=120,  # Keep warm for 2 minutes
-    timeout=900,
+    scaledown_window=100,  # Keep warm for 2 minutes
+    timeout=300,
     volumes={"/root/.local/share/tts": tts_cache},
 )
 class XTTSModel:

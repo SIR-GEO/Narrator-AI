@@ -47,6 +47,7 @@ const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_DELAY = 2000;
 let serverStatus = 'offline';
 let serverReady = false;
+let pendingCapture = false;
 
 function stopCurrentVideoStream() {
     if (currentStream) {
@@ -95,7 +96,6 @@ function playAudio(arrayBuffer) {
     const blob = new Blob([arrayBuffer], { type: 'audio/mp3' });
     audioQueue.push(blob);
     if (!isPlaying) {
-        hideLoadingPopup();
         playNextAudio();
     }
 }
@@ -109,8 +109,12 @@ function playNextAudio() {
         audio.setAttribute('webkit-playsinline', '');
         audio.src = url;
         audio.onerror = () => {
+            hideLoadingPopup();
             isPlaying = false;
             playNextAudio();
+        };
+        audio.onplaying = () => {
+            hideLoadingPopup();
         };
         audio.onended = () => {
             URL.revokeObjectURL(url);
@@ -140,6 +144,11 @@ function selectVoice() {
         feedbackElement.textContent = '';
     }
     feedbackElement.classList.remove('error');
+
+    const voiceSelection = document.getElementById('voice-selection');
+    if (voiceSelection) {
+        voiceSelection.classList.remove('needs-attention');
+    }
 }
 
 document.querySelectorAll('.voice-btn').forEach(btn => {
@@ -171,12 +180,21 @@ function captureAndAnalyseImage() {
         const feedbackElement = document.getElementById('feedback');
         feedbackElement.textContent = 'Please select a voice before narrating.';
         feedbackElement.classList.add('error');
+        feedbackElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        const voiceSelection = document.getElementById('voice-selection');
+        if (voiceSelection) {
+            voiceSelection.classList.add('needs-attention');
+            voiceSelection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
         return;
     }
 
     if (!ws || ws.readyState !== WebSocket.OPEN) {
+        pendingCapture = true;
         initWebSocket();
         updateServerStatus('connecting');
+        showLoadingPopup("Connecting to server...", "Warming up the GPU if needed");
         return;
     }
 
@@ -229,6 +247,10 @@ function initWebSocket() {
     ws.onopen = () => {
         reconnectAttempts = 0;
         updateServerStatus('online');
+        if (pendingCapture) {
+            pendingCapture = false;
+            captureAndAnalyseImage();
+        }
     };
 
     ws.onmessage = (event) => {
@@ -327,19 +349,17 @@ function updateServerStatus(status) {
 
 function updateReadyState() {
     const startButton = document.getElementById('start-btn');
-    if (serverReady) {
-        startButton.disabled = false;
-        startButton.textContent = 'Press here, once you have selected a voice below';
-    } else {
-        startButton.disabled = true;
-        startButton.textContent = 'Warming up...';
+    if (!startButton) {
+        return;
     }
+    startButton.disabled = false;
+    startButton.textContent = 'Press here, once you have selected a voice below';
 }
 
 // Add event listener to the start button for capturing and analysing the image
 const startButton = document.getElementById('start-btn');
-startButton.disabled = true;
-startButton.textContent = 'Warming up...';
+startButton.disabled = false;
+startButton.textContent = 'Press here, once you have selected a voice below';
 startButton.addEventListener('click', captureAndAnalyseImage);
 
 // Initialise WebSocket connection
